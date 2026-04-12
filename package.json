@@ -3,9 +3,10 @@
   "private": true,
   "description": "Racine du dépôt — l’app Next.js est dans le dossier web/.",
   "scripts": {
+    "preinstall": "cd web && npm install",
     "dev": "npm --prefix web run dev",
     "dev:turbo": "npm --prefix web run dev:turbo",
-    "build": "npm --prefix web run build",
+    "build": "cd web && npm run build",
     "build:turbo": "npm --prefix web run build:turbo",
     "start": "npm --prefix web run start",
     "lint": "npm --prefix web run lint",
