@@ -1,0 +1,15 @@
+{
+  "name": "otp-hora-siteweb",
+  "private": true,
+  "description": "Racine du dépôt — l’app Next.js est dans le dossier web/.",
+  "scripts": {
+    "dev": "npm --prefix web run dev",
+    "dev:turbo": "npm --prefix web run dev:turbo",
+    "build": "npm --prefix web run build",
+    "build:turbo": "npm --prefix web run build:turbo",
+    "start": "npm --prefix web run start",
+    "lint": "npm --prefix web run lint",
+    "typecheck": "npm --prefix web run typecheck",
+    "clean": "npm --prefix web run clean"
+  }
+}

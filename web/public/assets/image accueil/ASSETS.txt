@@ -1,0 +1,9 @@
+Copier ici les PNG du projet Flutter (dossier assets/image accueil/) sans renommer :
+
+- finance-guy-avatar_vhop.png
+- security-on_3ykb.png
+- notifications_uvwd.png
+- questions_52ic.png
+- Avatars_xsfb.png
+
+URL web : /assets/image accueil/<nom-du-fichier>.png
