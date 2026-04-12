@@ -12,15 +12,13 @@ import { useToast } from "@/components/ui/toast";
 import {
   deleteEnterpriseMe,
   logoutEnterprise,
-  setEnterpriseRecoveryEmail,
-  updateEnterpriseMe,
 } from "@/lib/api/enterprises";
 import {
   clearEnterpriseSession,
   getEnterpriseAccessToken,
 } from "@/lib/auth/enterprise-session";
 import { useEnterpriseQuery } from "@/hooks/use-enterprise-query";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import type { ReactNode, SVGProps } from "react";
 import { useEffect, useState } from "react";
@@ -154,12 +152,11 @@ function IconSave(p: SVGProps<SVGSVGElement>) {
 /* ─── Main view ──────────────────────────────────────────── */
 
 export function EnterpriseSettingsPageView() {
-  const { data: enterprise, isLoading } = useEnterpriseQuery();
-  const queryClient = useQueryClient();
+  const { isLoading } = useEnterpriseQuery();
   const router = useRouter();
   const { toast } = useToast();
 
-  const [error, setError] = useState<unknown>(null);
+  const [error] = useState<unknown>(null);
   const [notifications, setNotifications] = useState(true);
   const [hydrated, setHydrated] = useState(false);
 

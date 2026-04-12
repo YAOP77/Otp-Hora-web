@@ -5,7 +5,6 @@ import { ErrorBanner } from "@/components/ui/error-banner";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { createContact } from "@/lib/api/contacts";
-import { getAccessToken } from "@/lib/auth/session";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 

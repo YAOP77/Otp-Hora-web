@@ -3,6 +3,7 @@
 import { Skeleton } from "@/components/ui/skeleton";
 import { useHasMounted } from "@/hooks/use-has-mounted";
 import type { User } from "@/types/api";
+import Image from "next/image";
 
 type UserExtras = User & {
   linked_accounts_count?: number;
@@ -67,10 +68,12 @@ export function ProfileCard({
 
   return (
     <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-[#111111] p-6 sm:p-8">
-      <img
+      <Image
         src={HERO_IMAGE}
         alt=""
+        fill
         className="absolute inset-0 h-full w-full object-cover opacity-35"
+        sizes="100vw"
       />
       <div className="absolute inset-0 bg-[#0a0a0a]/75" aria-hidden />
 

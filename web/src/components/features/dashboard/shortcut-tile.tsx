@@ -12,7 +12,6 @@ type ShortcutTileProps = {
   comingSoon?: boolean;
 };
 
-const IMG = 152;
 
 /** Transitions fluides bordure / ombre (Tableau de bord). */
 const cardTransition =

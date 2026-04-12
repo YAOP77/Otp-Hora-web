@@ -239,7 +239,7 @@ export function EnterpriseRegisterForm() {
         </Link>
       </p>
       <p className="text-center text-[11px] text-secondary/70">
-        Vous recevrez une clé API affichée une seule fois à l'inscription.
+        Vous recevrez une clé API affichée une seule fois à l&apos;inscription.
       </p>
     </div>
   );

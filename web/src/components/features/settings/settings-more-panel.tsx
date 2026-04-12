@@ -3,8 +3,6 @@
 import { IconChevronRight } from "@/components/features/dashboard/icons";
 import { Button } from "@/components/ui/button";
 import { ErrorBanner } from "@/components/ui/error-banner";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Modal } from "@/components/ui/modal";
 import { useToast } from "@/components/ui/toast";
 import { deleteUserAccount, logout } from "@/lib/api/users";
