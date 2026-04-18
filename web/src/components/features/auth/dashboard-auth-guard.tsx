@@ -6,11 +6,8 @@ import { useEffect } from "react";
 
 /**
  * Vérifie la cohérence jeton / cookie : si le cookie a expiré ou été supprimé,
- * le middleware redirige ; si le jeton manque encore, déconnexion locale.
- *
- * Exception : /enterprise?link_id=<uuid> est un flux de consentement public
- * (partenaire OAuth-like) qui gère son propre login inline — on n'impose
- * pas d'auth côté client pour ne pas casser ce parcours.
+ * le middleware redirige ; si le jeton manque encore, déconnexion locale puis
+ * redirection vers /login en préservant l'URL courante dans `redirect`.
  */
 export function DashboardAuthGuard({ children }: { children: React.ReactNode }) {
   const router = useRouter();
@@ -18,15 +15,14 @@ export function DashboardAuthGuard({ children }: { children: React.ReactNode }) 
   const searchParams = useSearchParams();
 
   useEffect(() => {
-    const isConsentFlow =
-      pathname === "/enterprise" && searchParams.get("link_id");
-    if (isConsentFlow) return;
-
     const token = getAccessToken();
     const userId = getUserId();
     if (!token || !userId) {
       clearSession();
-      router.replace("/login");
+      const current = `${pathname ?? "/"}${searchParams.toString() ? `?${searchParams.toString()}` : ""}`;
+      const login = new URL("/login", window.location.origin);
+      login.searchParams.set("redirect", current);
+      router.replace(`${login.pathname}${login.search}`);
     }
   }, [router, pathname, searchParams]);
 

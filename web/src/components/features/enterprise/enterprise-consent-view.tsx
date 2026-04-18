@@ -2,9 +2,7 @@
 
 import { Button } from "@/components/ui/button";
 import { ErrorBanner } from "@/components/ui/error-banner";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { PinInput } from "@/components/ui/pin-input";
+import { isApiError } from "@/lib/api/errors";
 import {
   approveFlowLink,
   getFlowLinkPublic,
@@ -12,18 +10,17 @@ import {
   rejectFlowLink,
   type FlowLinkPublic,
 } from "@/lib/api/flow-links";
-import { isApiError } from "@/lib/api/errors";
-import { login } from "@/lib/api/users";
 import {
   clearSession,
   getAccessToken,
   hasSessionClient,
-  setSession,
 } from "@/lib/auth/session";
 import Image from "next/image";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
+import { useEffect, useMemo, useState } from "react";
 import type { SVGProps } from "react";
 
+/* ─── Icons ─────────────────────────────────────────────────── */
 function IconCheck(p: SVGProps<SVGSVGElement>) {
   return (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden {...p}>
@@ -60,14 +57,22 @@ type ConsentStep =
   | "error"
   | "status-approved"
   | "status-rejected"
-  | "need-login"
   | "confirm"
   | "approving"
   | "rejecting"
   | "approved-success"
   | "rejected-success";
 
+function buildLoginRedirect(): string {
+  if (typeof window === "undefined") return "/login";
+  const here = `${window.location.pathname}${window.location.search}`;
+  const url = new URL("/login", window.location.origin);
+  url.searchParams.set("redirect", here);
+  return `${url.pathname}${url.search}`;
+}
+
 export function EnterpriseConsentView({ linkId }: { linkId: string }) {
+  const router = useRouter();
   const validId = useMemo(() => isValidUuid(linkId), [linkId]);
 
   const [step, setStep] = useState<ConsentStep>(validId ? "loading" : "invalid-id");
@@ -75,29 +80,25 @@ export function EnterpriseConsentView({ linkId }: { linkId: string }) {
   const [loadError, setLoadError] = useState<unknown>(null);
   const [actionError, setActionError] = useState<unknown>(null);
 
-  // Login inline state
-  const [phone, setPhone] = useState("");
-  const [pin, setPin] = useState("");
-  const [loginError, setLoginError] = useState<unknown>(null);
-  const [loginLoading, setLoginLoading] = useState(false);
-
-  /** Détermine l'étape suivante en fonction du statut de la liaison + session. */
-  const resolveNextStep = useCallback((l: FlowLinkPublic): ConsentStep => {
-    if (l.status === "approved") return "status-approved";
-    if (l.status === "rejected") return "status-rejected";
-    return hasSessionClient() ? "confirm" : "need-login";
-  }, []);
-
-  // Chargement initial
+  // Chargement + garde d'auth
   useEffect(() => {
     if (!validId) return;
+
+    // Si pas de session, rediriger vers /login en préservant l'URL courante.
+    if (!hasSessionClient()) {
+      router.replace(buildLoginRedirect());
+      return;
+    }
+
     let cancelled = false;
     (async () => {
       try {
         const l = await getFlowLinkPublic(linkId);
         if (cancelled) return;
         setLink(l);
-        setStep(resolveNextStep(l));
+        if (l.status === "approved") setStep("status-approved");
+        else if (l.status === "rejected") setStep("status-rejected");
+        else setStep("confirm");
       } catch (e) {
         if (cancelled) return;
         setLoadError(e);
@@ -107,31 +108,22 @@ export function EnterpriseConsentView({ linkId }: { linkId: string }) {
     return () => {
       cancelled = true;
     };
-  }, [linkId, validId, resolveNextStep]);
+  }, [linkId, validId, router]);
 
-  async function onLoginSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    setLoginError(null);
-    if (!/^[+\d\s()-]{8,20}$/.test(phone)) {
-      setLoginError(new Error("Numéro de téléphone invalide (format E.164)."));
-      return;
+  function handleAuthLost() {
+    clearSession();
+    router.replace(buildLoginRedirect());
+  }
+
+  function messageForError(e: unknown): string | null {
+    if (!isApiError(e)) return null;
+    if (e.status === 404) {
+      return "Cette demande de liaison ne vous est pas destinée ou a expiré. Contactez la personne qui vous a envoyé ce lien.";
     }
-    if (!/^\d{4,6}$/.test(pin)) {
-      setLoginError(new Error("Le code PIN doit contenir 4 à 6 chiffres."));
-      return;
+    if (e.status === 409) {
+      return "Cette demande de liaison a déjà été traitée.";
     }
-    setLoginLoading(true);
-    try {
-      const res = await login({ phone: phone.trim(), pin }, getAccessToken);
-      setSession(res.token, res.userId);
-      setPin(""); // jamais conserver le PIN
-      if (link) setStep(resolveNextStep(link));
-    } catch (err) {
-      setLoginError(err);
-      setPin("");
-    } finally {
-      setLoginLoading(false);
-    }
+    return null;
   }
 
   async function onApprove() {
@@ -142,12 +134,11 @@ export function EnterpriseConsentView({ linkId }: { linkId: string }) {
       setStep("approved-success");
     } catch (err) {
       if (isApiError(err) && err.status === 401) {
-        clearSession();
-        setActionError(new Error("Session expirée — veuillez vous reconnecter."));
-        setStep("need-login");
+        handleAuthLost();
         return;
       }
-      setActionError(err);
+      const msg = messageForError(err);
+      setActionError(msg ? new Error(msg) : err);
       setStep("confirm");
     }
   }
@@ -160,12 +151,11 @@ export function EnterpriseConsentView({ linkId }: { linkId: string }) {
       setStep("rejected-success");
     } catch (err) {
       if (isApiError(err) && err.status === 401) {
-        clearSession();
-        setActionError(new Error("Session expirée — veuillez vous reconnecter."));
-        setStep("need-login");
+        handleAuthLost();
         return;
       }
-      setActionError(err);
+      const msg = messageForError(err);
+      setActionError(msg ? new Error(msg) : err);
       setStep("confirm");
     }
   }
@@ -251,59 +241,21 @@ export function EnterpriseConsentView({ linkId }: { linkId: string }) {
             />
           ) : null}
 
-          {step === "need-login" ? (
-            <>
-              <HeaderBlock
-                entName={entName}
-                subtitle="Connectez-vous à votre compte Hora pour continuer."
-              />
-              <form className="mt-6 space-y-3" onSubmit={onLoginSubmit} noValidate>
-                <ErrorBanner error={loginError ?? actionError} />
-                <div>
-                  <Label htmlFor="consent-phone" className="text-[11px]">
-                    Numéro de téléphone
-                  </Label>
-                  <Input
-                    id="consent-phone"
-                    type="tel"
-                    autoComplete="tel"
-                    value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
-                    placeholder="+225 07 00 00 00 00"
-                    className="h-10 text-sm"
-                    disabled={loginLoading}
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="consent-pin-0" className="text-[11px]">
-                    Code PIN (4 à 6 chiffres)
-                  </Label>
-                  <div className="mt-1.5 flex justify-center">
-                    <PinInput
-                      value={pin}
-                      onChange={setPin}
-                      disabled={loginLoading}
-                      length={6}
-                    />
-                  </div>
-                </div>
-                <Button
-                  type="submit"
-                  className="h-10 w-full bg-[#0B3A6E] text-xs hover:bg-[#0B3A6E]/90"
-                  loading={loginLoading}
-                >
-                  Se connecter
-                </Button>
-              </form>
-            </>
-          ) : null}
-
           {step === "confirm" || step === "approving" || step === "rejecting" ? (
             <>
-              <HeaderBlock
-                entName={entName}
-                subtitle="demande à vous authentifier avec Hora."
-              />
+              <div className="text-center">
+                <p className="text-xs font-semibold uppercase tracking-wider text-secondary">
+                  Demande d&apos;authentification
+                </p>
+                <h1 className="mt-2 text-xl font-extrabold tracking-tight text-foreground">
+                  <span className="text-[#0B3A6E] dark:text-[#7dafe6]">
+                    {entName}
+                  </span>
+                </h1>
+                <p className="mt-1.5 text-sm text-secondary">
+                  demande à vous authentifier avec Hora.
+                </p>
+              </div>
 
               <div className="mt-5 rounded-lg border border-border/70 bg-neutral-50 px-4 py-3 text-xs leading-relaxed text-secondary dark:bg-zinc-900/40">
                 <div className="flex items-start gap-2">
@@ -351,26 +303,6 @@ export function EnterpriseConsentView({ linkId }: { linkId: string }) {
           Sécurisé par OTP Hora · {new Date().getFullYear()}
         </p>
       </div>
-    </div>
-  );
-}
-
-function HeaderBlock({
-  entName,
-  subtitle,
-}: {
-  entName: string;
-  subtitle: string;
-}) {
-  return (
-    <div className="text-center">
-      <p className="text-xs font-semibold uppercase tracking-wider text-secondary">
-        Demande d&apos;authentification
-      </p>
-      <h1 className="mt-2 text-xl font-extrabold tracking-tight text-foreground">
-        <span className="text-[#0B3A6E] dark:text-[#7dafe6]">{entName}</span>
-      </h1>
-      <p className="mt-1.5 text-sm text-secondary">{subtitle}</p>
     </div>
   );
 }

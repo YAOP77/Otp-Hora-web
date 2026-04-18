@@ -1,7 +1,9 @@
 import { endpoints } from "@/lib/api/endpoints";
 import { createHttpClient } from "@/lib/api/http-client";
+import { tryRefreshUserSession } from "@/lib/auth/user-http";
 import {
   extractAccessToken,
+  extractRefreshToken,
   extractUserId,
   parseUser,
   unwrapApiData,
@@ -16,15 +18,20 @@ export type LoginPayload = {
 export type RegisterPayload = Record<string, unknown>;
 
 function client(getToken: () => string | null) {
-  return createHttpClient({ getToken });
+  return createHttpClient({ getToken, onUnauthorized: tryRefreshUserSession });
 }
 
 export async function login(
   payload: LoginPayload,
   getToken: () => string | null,
-): Promise<{ token: string; userId: string; raw: unknown }> {
-  const { request } = client(getToken);
-  /** Corps aligné Postman : `phone` + `PIN` (majuscules). */
+): Promise<{
+  token: string;
+  userId: string;
+  refreshToken: string | null;
+  raw: unknown;
+}> {
+  /** Le login ne doit PAS tenter d'auto-refresh sur 401 (loop). */
+  const { request } = createHttpClient({ getToken });
   const json = await request<unknown>("POST", endpoints.usersLogin, {
     json: { phone: payload.phone, PIN: payload.pin },
   });
@@ -36,7 +43,8 @@ export async function login(
   if (!userId) {
     throw new Error("Réponse de connexion sans identifiant utilisateur.");
   }
-  return { token, userId, raw: json };
+  const refreshToken = extractRefreshToken(json);
+  return { token, userId, refreshToken, raw: json };
 }
 
 export async function logout(getToken: () => string | null): Promise<void> {

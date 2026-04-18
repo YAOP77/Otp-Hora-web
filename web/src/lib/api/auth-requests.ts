@@ -1,5 +1,6 @@
 import { endpoints } from "@/lib/api/endpoints";
 import { createHttpClient } from "@/lib/api/http-client";
+import { tryRefreshUserSession } from "@/lib/auth/user-http";
 
 export type EnterpriseAuthHeaders = {
   token?: string | null;
@@ -53,7 +54,7 @@ export async function approveAuthRequest(
   user_id: string,
   getUserToken: () => string | null,
 ): Promise<unknown> {
-  const { request } = createHttpClient({ getToken: getUserToken });
+  const { request } = createHttpClient({ getToken: getUserToken, onUnauthorized: tryRefreshUserSession });
   return request<unknown>("POST", endpoints.authApprove(request_id), { json: { user_id } });
 }
 
@@ -62,7 +63,7 @@ export async function rejectAuthRequest(
   user_id: string,
   getUserToken: () => string | null,
 ): Promise<unknown> {
-  const { request } = createHttpClient({ getToken: getUserToken });
+  const { request } = createHttpClient({ getToken: getUserToken, onUnauthorized: tryRefreshUserSession });
   return request<unknown>("POST", endpoints.authReject(request_id), { json: { user_id } });
 }
 

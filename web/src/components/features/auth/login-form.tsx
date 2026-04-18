@@ -10,7 +10,7 @@ import { isApiError } from "@/lib/api/errors";
 import { registerUserDevice } from "@/lib/api/devices";
 import { login } from "@/lib/api/users";
 import { getDeviceRegistrationPayload } from "@/lib/auth/device-context";
-import { getAccessToken, setSession } from "@/lib/auth/session";
+import { getAccessToken, isSafeRedirectPath, setSession } from "@/lib/auth/session";
 import { isApiConfigured } from "@/lib/config/env";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
@@ -47,7 +47,11 @@ type PinValues = z.infer<typeof pinSchema>;
 export function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const from = searchParams.get("from") ?? "/dashboard";
+  /** Paramètre `redirect` (nouveau) — fallback sur `from` (legacy). Doit être
+   *  une URL relative interne, sinon on revient au tableau de bord. */
+  const rawRedirect =
+    searchParams.get("redirect") ?? searchParams.get("from") ?? "/dashboard";
+  const redirectTo = isSafeRedirectPath(rawRedirect) ? rawRedirect : "/dashboard";
 
   const [step, setStep] = useState<1 | 2>(1);
   const [phone, setPhone] = useState("");
@@ -87,12 +91,12 @@ export function LoginForm() {
         { phone: phone.trim(), pin: values.pin },
         getAccessToken,
       );
-      setSession(result.token, result.userId);
+      setSession(result.token, result.userId, result.refreshToken);
       void registerUserDevice(
         getDeviceRegistrationPayload("user"),
         getAccessToken,
       ).catch(() => {});
-      router.replace(from.startsWith("/") ? from : "/dashboard");
+      router.replace(redirectTo);
       router.refresh();
     } catch (e) {
       setSubmitError(e);

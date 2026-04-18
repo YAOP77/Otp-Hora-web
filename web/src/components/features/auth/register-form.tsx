@@ -12,7 +12,7 @@ import { registerUser } from "@/lib/api/users";
 import { getDeviceRegistrationPayload } from "@/lib/auth/device-context";
 import { getAccessToken, setSession } from "@/lib/auth/session";
 import { isApiConfigured } from "@/lib/config/env";
-import { extractAccessToken, extractUserId } from "@/types/api";
+import { extractAccessToken, extractRefreshToken, extractUserId } from "@/types/api";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -95,8 +95,9 @@ export function RegisterForm() {
       );
       const token = extractAccessToken(raw);
       const userId = extractUserId(raw);
+      const refreshToken = extractRefreshToken(raw);
       if (token && userId) {
-        setSession(token, userId);
+        setSession(token, userId, refreshToken);
         void registerUserDevice(
           getDeviceRegistrationPayload("user"),
           getAccessToken,

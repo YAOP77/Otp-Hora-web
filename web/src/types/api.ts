@@ -85,6 +85,30 @@ export function extractAccessToken(json: unknown): string | null {
   return null;
 }
 
+/** Extraction du refresh token depuis la réponse login/refresh (Postman : `auth.refresh_token`). */
+export function extractRefreshToken(json: unknown): string | null {
+  if (!json || typeof json !== "object") return null;
+  const o = json as Record<string, unknown>;
+  if (typeof o.refresh_token === "string") return o.refresh_token;
+  if (typeof o.refreshToken === "string") return o.refreshToken;
+
+  const auth = o.auth;
+  if (auth && typeof auth === "object") {
+    const a = auth as Record<string, unknown>;
+    if (typeof a.refresh_token === "string") return a.refresh_token;
+    if (typeof a.refreshToken === "string") return a.refreshToken;
+  }
+
+  const data = o.data;
+  if (data && typeof data === "object") {
+    const d = data as Record<string, unknown>;
+    if (typeof d.refresh_token === "string") return d.refresh_token;
+    if (typeof d.refreshToken === "string") return d.refreshToken;
+  }
+
+  return null;
+}
+
 export function extractUserId(json: unknown, fallbackPhone?: string): string | null {
   if (!json || typeof json !== "object") return fallbackPhone ?? null;
   const o = json as Record<string, unknown>;

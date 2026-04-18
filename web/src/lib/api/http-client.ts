@@ -12,6 +12,13 @@ export type HttpMethod = "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
 
 export type HttpClientOptions = {
   getToken?: () => string | null;
+  /**
+   * Appelé quand une réponse 401 est reçue : doit tenter de renouveler le
+   * token et renvoyer le nouveau `access_token` (ou `null` si le refresh
+   * échoue). Si un token est renvoyé, la requête originale est rejouée
+   * UNE seule fois avec le nouveau token.
+   */
+  onUnauthorized?: () => Promise<string | null>;
 };
 
 export type ApiFetchExpect = "json" | "text";
@@ -51,13 +58,14 @@ function messageFromBody(body: unknown): string | undefined {
 }
 
 export function createHttpClient(options: HttpClientOptions = {}) {
-  const { getToken } = options;
+  const { getToken, onUnauthorized } = options;
 
-  async function request<T>(
+  async function runOnce<T>(
     method: HttpMethod,
     path: string,
-    init?: RequestInit & { json?: unknown; expect?: ApiFetchExpect },
-  ): Promise<T> {
+    init: (RequestInit & { json?: unknown; expect?: ApiFetchExpect }) | undefined,
+    forcedToken: string | null,
+  ): Promise<{ ok: true; data: T } | { ok: false; status: number; parsedBody: unknown; contentType: string; shouldParseJson: boolean }> {
     const base = getApiBaseUrl();
     if (!base) {
       throw new ApiError(
@@ -73,8 +81,8 @@ export function createHttpClient(options: HttpClientOptions = {}) {
       headers.set("Accept", expect === "text" ? "text/plain, */*" : "application/json");
     }
 
-    const token = getToken?.() ?? null;
-    if (token && !headers.has("Authorization")) {
+    const token = forcedToken ?? getToken?.() ?? null;
+    if (token) {
       headers.set("Authorization", `Bearer ${token}`);
     }
 
@@ -110,19 +118,10 @@ export function createHttpClient(options: HttpClientOptions = {}) {
         : await response.text();
 
       if (!response.ok) {
-        const backend = shouldParseJson ? extractBackendError(parsedBody) : {};
-        const msg =
-          messageFromBody(shouldParseJson ? parsedBody : undefined) ??
-          `Erreur HTTP ${response.status}${response.statusText ? ` (${response.statusText})` : ""}`;
-        throw new ApiError(msg, {
-          code: "http",
-          status: backend.status ?? response.status,
-          backendCode: backend.code,
-          body: parsedBody,
-        });
+        return { ok: false, status: response.status, parsedBody, contentType, shouldParseJson };
       }
 
-      return parsedBody as T;
+      return { ok: true, data: parsedBody as T };
     } catch (e) {
       clearTimeout(timeoutId);
       if (e instanceof ApiError) throw e;
@@ -140,6 +139,35 @@ export function createHttpClient(options: HttpClientOptions = {}) {
       }
       throw new ApiError("Erreur inattendue.", { code: "parse", cause: e });
     }
+  }
+
+  async function request<T>(
+    method: HttpMethod,
+    path: string,
+    init?: RequestInit & { json?: unknown; expect?: ApiFetchExpect },
+  ): Promise<T> {
+    let result = await runOnce<T>(method, path, init, null);
+
+    if (!result.ok && result.status === 401 && onUnauthorized) {
+      const newToken = await onUnauthorized();
+      if (newToken) {
+        result = await runOnce<T>(method, path, init, newToken);
+      }
+    }
+
+    if (result.ok) return result.data;
+
+    const { parsedBody, shouldParseJson, status } = result;
+    const backend = shouldParseJson ? extractBackendError(parsedBody) : {};
+    const msg =
+      messageFromBody(shouldParseJson ? parsedBody : undefined) ??
+      `Erreur HTTP ${status}`;
+    throw new ApiError(msg, {
+      code: "http",
+      status: backend.status ?? status,
+      backendCode: backend.code,
+      body: parsedBody,
+    });
   }
 
   return { request };

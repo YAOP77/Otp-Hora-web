@@ -1,5 +1,6 @@
 import { endpoints } from "@/lib/api/endpoints";
 import { createHttpClient } from "@/lib/api/http-client";
+import { tryRefreshUserSession } from "@/lib/auth/user-http";
 
 /**
  * Infos publiques d'une liaison OAuth-like (pas d'auth requise).
@@ -38,7 +39,7 @@ export async function approveFlowLink(
   linkId: string,
   getToken: () => string | null,
 ): Promise<{ link_id: string; status: "approved" }> {
-  const { request } = createHttpClient({ getToken });
+  const { request } = createHttpClient({ getToken, onUnauthorized: tryRefreshUserSession });
   const raw = await request<ApiEnvelope<{ link_id: string; status: "approved" }>>(
     "POST",
     endpoints.meLinkApprove(linkId),
@@ -52,7 +53,7 @@ export async function rejectFlowLink(
   linkId: string,
   getToken: () => string | null,
 ): Promise<{ link_id: string; status: "rejected" }> {
-  const { request } = createHttpClient({ getToken });
+  const { request } = createHttpClient({ getToken, onUnauthorized: tryRefreshUserSession });
   const raw = await request<ApiEnvelope<{ link_id: string; status: "rejected" }>>(
     "POST",
     endpoints.meLinkReject(linkId),

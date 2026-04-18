@@ -1,5 +1,6 @@
 import { endpoints } from "@/lib/api/endpoints";
 import { createHttpClient } from "@/lib/api/http-client";
+import { tryRefreshUserSession } from "@/lib/auth/user-http";
 
 export type EnterpriseAuthHeaders = {
   token?: string | null;
@@ -28,7 +29,10 @@ export async function confirmIdentityLink(
   payload: { link_id: string; user_id: string },
   getUserToken: () => string | null,
 ): Promise<unknown> {
-  const { request } = createHttpClient({ getToken: getUserToken });
+  const { request } = createHttpClient({
+    getToken: getUserToken,
+    onUnauthorized: tryRefreshUserSession,
+  });
   return request<unknown>("POST", endpoints.linksConfirm, { json: payload });
 }
 
