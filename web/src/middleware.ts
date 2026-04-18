@@ -21,6 +21,13 @@ export function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
+  // /enterprise?link_id=<uuid> est un flux de consentement partenaire :
+  // la page gère son propre état d'authentification (login inline), donc
+  // on laisse passer sans cookie de session utilisateur.
+  if (path === "/enterprise" && request.nextUrl.searchParams.has("link_id")) {
+    return NextResponse.next();
+  }
+
   const hasUser = request.cookies.get(AUTH_SESSION_COOKIE)?.value === "1";
   if (!hasUser) {
     const login = new URL("/login", request.url);

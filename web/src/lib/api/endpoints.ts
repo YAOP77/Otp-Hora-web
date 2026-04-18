@@ -44,6 +44,13 @@ export const endpoints = {
   links: "/api/links",
   linksConfirm: "/api/links/confirm",
 
+  flowLinkPublic: (linkId: string) =>
+    `/api/flow/links/${encodeURIComponent(linkId)}`,
+  meLinkApprove: (linkId: string) =>
+    `/api/me/links/${encodeURIComponent(linkId)}/approve`,
+  meLinkReject: (linkId: string) =>
+    `/api/me/links/${encodeURIComponent(linkId)}/reject`,
+
   contacts: "/api/contacts",
   devices: "/api/devices",
 } as const;
