@@ -8,6 +8,8 @@ import {
   NavIconUser,
 } from "@/components/layout/dashboard-nav-icons";
 import { ThemeToggleNav } from "@/components/layout/theme-toggle-nav";
+import { useI18n } from "@/components/providers/i18n-provider";
+import type { TranslationKey } from "@/lib/i18n/translations";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -15,27 +17,28 @@ import type { ComponentType, SVGProps } from "react";
 
 type NavLinkItem = {
   href: string;
-  label: string;
+  labelKey: TranslationKey;
   Icon: ComponentType<SVGProps<SVGSVGElement>>;
 };
 
 const navLinks: NavLinkItem[] = [
-  { href: "/dashboard", label: "Tableau de bord", Icon: NavIconDashboard },
-  { href: "/account", label: "Compte", Icon: NavIconUser },
-  { href: "/devices", label: "Historique de connexion", Icon: NavIconHistory },
-  { href: "/enterprise", label: "Liaisons & identité", Icon: NavIconBuilding },
-  { href: "/settings", label: "Paramètres", Icon: NavIconSettings },
+  { href: "/dashboard", labelKey: "nav.dashboard", Icon: NavIconDashboard },
+  { href: "/account", labelKey: "nav.account", Icon: NavIconUser },
+  { href: "/devices", labelKey: "nav.history", Icon: NavIconHistory },
+  { href: "/enterprise", labelKey: "nav.links", Icon: NavIconBuilding },
+  { href: "/settings", labelKey: "nav.settings", Icon: NavIconSettings },
 ];
 
 const linkPairGroups = [navLinks.slice(0, 2), navLinks.slice(2, 4)];
 
 function NavLinkRow({
   href,
-  label,
+  labelKey,
   Icon,
   onNavigate,
 }: NavLinkItem & { onNavigate?: () => void }) {
   const pathname = usePathname();
+  const { t } = useI18n();
   const active =
     href === "/dashboard"
       ? pathname === "/dashboard"
@@ -53,7 +56,7 @@ function NavLinkRow({
       aria-current={active ? "page" : undefined}
     >
       <Icon className={`nav-icon size-[18px] shrink-0 ${active ? "opacity-100" : "opacity-75"}`} />
-      {label}
+      {t(labelKey)}
     </Link>
   );
 }

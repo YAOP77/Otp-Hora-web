@@ -3,8 +3,8 @@
 import { HoraBadge } from "@/components/features/auth/auth-shell";
 import { Button } from "@/components/ui/button";
 import { ErrorBanner } from "@/components/ui/error-banner";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { PhoneInput } from "@/components/ui/phone-input";
 import { PinInput } from "@/components/ui/pin-input";
 import { registerEnterpriseDevice } from "@/lib/api/devices";
 import { loginEnterprise } from "@/lib/api/enterprises";
@@ -119,13 +119,17 @@ export function EnterpriseLoginForm() {
               <Label htmlFor="ent-phone" className="text-[11px]">
                 Téléphone (E.164)
               </Label>
-              <Input
+              <PhoneInput
                 id="ent-phone"
-                type="tel"
-                autoComplete="tel"
-                placeholder="+33 1 23 45 67 89"
-                className="h-9 text-xs"
-                {...phoneForm.register("phone")}
+                value={phoneForm.watch("phone") ?? ""}
+                onChange={(e164) =>
+                  phoneForm.setValue("phone", e164, {
+                    shouldValidate: true,
+                    shouldDirty: true,
+                  })
+                }
+                aria-invalid={Boolean(phoneForm.formState.errors.phone)}
+                placeholder="01 23 45 67 89"
               />
               {phoneForm.formState.errors.phone ? (
                 <p className="mt-0.5 text-[11px] text-error" role="alert">

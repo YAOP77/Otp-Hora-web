@@ -1,9 +1,10 @@
 "use client";
 
 import { Logo } from "@/components/ui/logo";
+import { useI18n } from "@/components/providers/i18n-provider";
 import { useTheme } from "@/components/providers/theme-provider";
+import type { TranslationKey } from "@/lib/i18n/translations";
 import Link from "next/link";
-import { useState } from "react";
 import type { SVGProps } from "react";
 
 function IconSun(props: SVGProps<SVGSVGElement>) {
@@ -32,18 +33,21 @@ function IconGlobe(props: SVGProps<SVGSVGElement>) {
   );
 }
 
-export const SUB_NAV_LINKS = [
-  { href: "#features", label: "Fonctionnalités" },
-  { href: "#start", label: "Commencer" },
-  { href: "#download", label: "Télécharger" },
-  { href: "#about", label: "À propos de nous" },
-  { href: "#contact", label: "Nous contacter" },
-  { href: "#faq", label: "FAQ" },
-] as const;
+export const SUB_NAV_LINKS: ReadonlyArray<{
+  href: string;
+  labelKey: TranslationKey;
+}> = [
+  { href: "#features", labelKey: "subnav.features" },
+  { href: "#start", labelKey: "subnav.start" },
+  { href: "#download", labelKey: "subnav.download" },
+  { href: "#about", labelKey: "subnav.about" },
+  { href: "#contact", labelKey: "subnav.contact" },
+  { href: "#faq", labelKey: "subnav.faq" },
+];
 
 export function MarketingHeader() {
   const { theme, toggleTheme, mounted } = useTheme();
-  const [lang, setLang] = useState<"fr" | "en">("fr");
+  const { lang, toggleLang, t } = useI18n();
   const isDark = mounted && theme === "dark";
 
   return (
@@ -60,7 +64,7 @@ export function MarketingHeader() {
             href="/login"
             className="nav-link-animated hidden rounded-lg px-3 py-2 text-sm font-medium text-secondary transition-colors hover:text-primary sm:inline-flex sm:items-center"
           >
-            Utilisateur
+            {t("header.user")}
           </Link>
           <span className="hidden text-secondary/40 sm:inline" aria-hidden>
             |
@@ -69,7 +73,7 @@ export function MarketingHeader() {
             href="/portail-entreprise/login"
             className="nav-link-animated hidden rounded-lg px-3 py-2 text-sm font-medium text-secondary transition-colors hover:text-primary sm:inline-flex sm:items-center"
           >
-            Entreprise
+            {t("header.enterprise")}
           </Link>
           <span className="hidden text-secondary/40 sm:inline" aria-hidden>
             |
@@ -78,14 +82,14 @@ export function MarketingHeader() {
             href="/register"
             className="nav-link-animated hidden rounded-lg px-3 py-2 text-sm font-medium text-secondary transition-colors hover:text-primary sm:inline-flex sm:items-center"
           >
-            Créer son compte
+            {t("header.createAccount")}
           </Link>
 
           <button
             type="button"
             onClick={toggleTheme}
-            aria-label={isDark ? "Activer le mode clair" : "Activer le mode sombre"}
-            title={isDark ? "Mode clair" : "Mode sombre"}
+            aria-label={isDark ? t("common.theme.light") : t("common.theme.dark")}
+            title={isDark ? t("common.theme.light") : t("common.theme.dark")}
             className="ml-1 inline-flex size-9 items-center justify-center rounded-full border border-border/60 bg-background/40 text-secondary transition-all duration-300 hover:-translate-y-px hover:border-primary/50 hover:text-primary"
           >
             {isDark ? <IconSun className="size-[18px]" /> : <IconMoon className="size-[18px]" />}
@@ -93,9 +97,9 @@ export function MarketingHeader() {
 
           <button
             type="button"
-            onClick={() => setLang((l) => (l === "fr" ? "en" : "fr"))}
-            aria-label="Changer la langue"
-            title={lang === "fr" ? "Français" : "English"}
+            onClick={toggleLang}
+            aria-label={t("header.changeLanguage")}
+            title={lang === "fr" ? t("common.lang.fr") : t("common.lang.en")}
             className="inline-flex h-9 items-center gap-1.5 rounded-full border border-border/60 bg-background/40 px-3 text-xs font-bold uppercase tracking-wide text-secondary transition-all duration-300 hover:-translate-y-px hover:border-primary/50 hover:text-primary"
           >
             <IconGlobe className="size-[16px]" />
@@ -106,7 +110,7 @@ export function MarketingHeader() {
             href="/register"
             className="inline-flex min-h-10 items-center rounded-lg bg-primary px-3 py-2 text-xs font-bold text-white transition-all duration-300 hover:-translate-y-px hover:bg-primary/90 sm:hidden"
           >
-            S&apos;inscrire
+            {t("header.signup")}
           </Link>
         </nav>
       </div>
@@ -127,7 +131,7 @@ export function MarketingHeader() {
               href={item.href}
               className="whitespace-nowrap text-[10px] font-medium text-white/70 transition-colors duration-200 hover:text-white"
             >
-              {item.label}
+              {t(item.labelKey)}
             </a>
           ))}
         </nav>

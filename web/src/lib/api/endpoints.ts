@@ -50,6 +50,15 @@ export const endpoints = {
     `/api/me/links/${encodeURIComponent(linkId)}/approve`,
   meLinkReject: (linkId: string) =>
     `/api/me/links/${encodeURIComponent(linkId)}/reject`,
+  /** Historique des liaisons de l'utilisateur courant. */
+  meLinks: "/api/me/links",
+  /** Identifiant public utilisateur (user_key). */
+  usersMeUserKey: "/api/users/me/user-key",
+  /** Historique des liaisons de l'entreprise courante. */
+  enterprisesLinks: "/api/enterprises/me/links",
+  /** Clé API de l'entreprise (GET + rotate). */
+  enterprisesApiKey: "/api/enterprises/me/api-key",
+  enterprisesApiKeyRotate: "/api/enterprises/me/api-key/rotate",
 
   contacts: "/api/contacts",
   devices: "/api/devices",

@@ -1,10 +1,11 @@
 "use client";
 
 import { HoraBadge } from "@/components/features/auth/auth-shell";
+import { useI18n } from "@/components/providers/i18n-provider";
 import { Button } from "@/components/ui/button";
 import { ErrorBanner } from "@/components/ui/error-banner";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { PhoneInput } from "@/components/ui/phone-input";
 import { PinInput } from "@/components/ui/pin-input";
 import { isApiError } from "@/lib/api/errors";
 import { registerUserDevice } from "@/lib/api/devices";
@@ -45,6 +46,7 @@ type PhoneValues = z.infer<typeof phoneSchema>;
 type PinValues = z.infer<typeof pinSchema>;
 
 export function LoginForm() {
+  const { t } = useI18n();
   const router = useRouter();
   const searchParams = useSearchParams();
   /** Paramètre `redirect` (nouveau) — fallback sur `from` (legacy). Doit être
@@ -113,8 +115,7 @@ export function LoginForm() {
       {step === 1 ? (
         <div key="step-phone" className="auth-slide-enter">
           <p className="mb-6 text-[11px] leading-relaxed text-secondary">
-            Connectez-vous à <HoraBadge /> avec votre numéro de téléphone
-            pour accéder à votre espace sécurisé.
+            {t("auth.login.ctx").split("Hora")[0]}<HoraBadge />{t("auth.login.ctx").split("Hora")[1]}
           </p>
 
           <form
@@ -124,16 +125,19 @@ export function LoginForm() {
           >
             <div>
               <Label htmlFor="phone" className="text-[11px]">
-                Numéro de téléphone
+                {t("auth.login.phoneLabel")}
               </Label>
-              <Input
+              <PhoneInput
                 id="phone"
-                type="tel"
-                autoComplete="tel"
-                placeholder="+33 6 12 34 56 78"
-                className="h-9 text-xs"
+                value={phoneForm.watch("phone") ?? ""}
+                onChange={(e164) =>
+                  phoneForm.setValue("phone", e164, {
+                    shouldValidate: true,
+                    shouldDirty: true,
+                  })
+                }
                 aria-invalid={Boolean(phoneForm.formState.errors.phone)}
-                {...phoneForm.register("phone")}
+                placeholder="07 00 00 00 00"
               />
               {phoneForm.formState.errors.phone ? (
                 <p className="mt-0.5 text-[11px] text-error" role="alert">
@@ -146,7 +150,7 @@ export function LoginForm() {
               className="h-9 w-full gap-2 text-xs"
               loading={phoneForm.formState.isSubmitting}
             >
-              Continuer
+              {t("common.continue")}
               <IconArrowRight className="size-3.5" />
             </Button>
           </form>
@@ -154,8 +158,7 @@ export function LoginForm() {
       ) : (
         <div key="step-pin" className="auth-slide-enter">
           <p className="mb-6 text-[11px] leading-relaxed text-secondary">
-            Saisissez votre code PIN <HoraBadge /> pour confirmer
-            votre identité.
+            {t("auth.login.pinCtx").split("Hora")[0]}<HoraBadge />{t("auth.login.pinCtx").split("Hora")[1]}
           </p>
 
           <form
@@ -193,14 +196,14 @@ export function LoginForm() {
                   setSubmitError(null);
                 }}
               >
-                Modifier
+                {t("common.edit")}
               </Button>
               <Button
                 type="submit"
                 className="h-9 gap-2 text-xs"
                 loading={pinForm.formState.isSubmitting}
               >
-                Se connecter
+                {t("auth.login.submit")}
                 <IconArrowRight className="size-3.5" />
               </Button>
             </div>
@@ -209,25 +212,25 @@ export function LoginForm() {
       )}
 
       <p className="text-center text-xs text-secondary">
-        Pas encore de compte ?{" "}
+        {t("auth.login.noAccount")}{" "}
         <Link
           href="/register"
           className="font-medium text-primary underline-offset-4 hover:underline"
         >
-          Créer un compte
+          {t("auth.login.createAccount")}
         </Link>
       </p>
       <p className="text-center text-[11px] text-secondary">
         <Link href="/portail-entreprise/login" className="text-primary underline-offset-4 hover:underline">
-          Connexion entreprise
+          {t("auth.login.enterprise")}
         </Link>
         {" · "}
         <Link href="/pin-recovery" className="text-primary underline-offset-4 hover:underline">
-          PIN oublié
+          {t("auth.login.forgotPin")}
         </Link>
         {" · "}
         <Link href="/verify-email" className="text-primary underline-offset-4 hover:underline">
-          Vérifier mon email
+          {t("auth.login.verifyEmail")}
         </Link>
       </p>
     </div>

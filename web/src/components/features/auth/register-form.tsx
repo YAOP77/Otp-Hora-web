@@ -1,11 +1,14 @@
 "use client";
 
 import { HoraBadge } from "@/components/features/auth/auth-shell";
+import { useI18n } from "@/components/providers/i18n-provider";
 import { Button } from "@/components/ui/button";
 import { ErrorBanner } from "@/components/ui/error-banner";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { PhoneInput } from "@/components/ui/phone-input";
 import { PinInput } from "@/components/ui/pin-input";
+import { createContact } from "@/lib/api/contacts";
 import { isApiError } from "@/lib/api/errors";
 import { registerUserDevice } from "@/lib/api/devices";
 import { registerUser } from "@/lib/api/users";
@@ -45,23 +48,39 @@ const nameSchema = z.object({
   prenom: z.string().min(1, "Indiquez votre prénom").max(120),
 });
 
+const phoneSchema = z.object({
+  phone: z
+    .string()
+    .min(8, "Numéro trop court")
+    .max(20, "Numéro trop long")
+    .regex(/^\+\d{7,18}$/, "Numéro invalide (format E.164)"),
+});
+
 const pinSchema = z.object({
   pin: z.string().regex(/^\d{4,6}$/, "PIN : 4 à 6 chiffres"),
 });
 
 type NameValues = z.infer<typeof nameSchema>;
+type PhoneValues = z.infer<typeof phoneSchema>;
 type PinValues = z.infer<typeof pinSchema>;
 
 export function RegisterForm() {
+  const { t } = useI18n();
   const router = useRouter();
-  const [step, setStep] = useState<1 | 2>(1);
+  const [step, setStep] = useState<1 | 2 | 3>(1);
   const [nameData, setNameData] = useState({ nom: "", prenom: "" });
+  const [phoneData, setPhoneData] = useState("");
   const [error, setError] = useState<unknown>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
   const nameForm = useForm<NameValues>({
     resolver: zodResolver(nameSchema),
     defaultValues: { nom: "", prenom: "" },
+  });
+
+  const phoneForm = useForm<PhoneValues>({
+    resolver: zodResolver(phoneSchema),
+    defaultValues: { phone: "" },
   });
 
   const pinForm = useForm<PinValues>({
@@ -75,6 +94,13 @@ export function RegisterForm() {
     setError(null);
     setNameData({ nom: values.nom.trim(), prenom: values.prenom.trim() });
     setStep(2);
+    phoneForm.reset({ phone: phoneData });
+  }
+
+  function onPhoneSubmit(values: PhoneValues) {
+    setError(null);
+    setPhoneData(values.phone.trim());
+    setStep(3);
     pinForm.reset({ pin: "" });
   }
 
@@ -89,6 +115,7 @@ export function RegisterForm() {
       return;
     }
     try {
+      /** 1) Création du compte utilisateur — retourne user_id + tokens. */
       const raw = await registerUser(
         { nom: nameData.nom, prenom: nameData.prenom, pin: values.pin },
         getAccessToken,
@@ -96,17 +123,30 @@ export function RegisterForm() {
       const token = extractAccessToken(raw);
       const userId = extractUserId(raw);
       const refreshToken = extractRefreshToken(raw);
-      if (token && userId) {
-        setSession(token, userId, refreshToken);
-        void registerUserDevice(
-          getDeviceRegistrationPayload("user"),
-          getAccessToken,
-        ).catch(() => {});
-        router.replace("/dashboard");
-        router.refresh();
+      if (!token || !userId) {
+        /** Pas de token → on renvoie l'utilisateur sur /login. */
+        router.push("/login");
         return;
       }
-      router.push("/login");
+      /** 2) Persister la session AVANT l'appel /contacts pour que le token
+       *  soit disponible si l'endpoint contacts vérifie l'auth. */
+      setSession(token, userId, refreshToken);
+      /** 3) Créer le contact avec l'user_id fraîchement reçu.
+       *  Non-bloquant : l'inscription reste valide même si contacts échoue. */
+      if (phoneData) {
+        await createContact({
+          user_id: userId,
+          phone_number: phoneData,
+        }).catch(() => {
+          /* ignore — contact pourra être ajouté plus tard */
+        });
+      }
+      void registerUserDevice(
+        getDeviceRegistrationPayload("user"),
+        getAccessToken,
+      ).catch(() => {});
+      router.replace("/dashboard");
+      router.refresh();
     } catch (e) {
       setError(e);
       if (isApiError(e) && e.status === 409) {
@@ -125,8 +165,7 @@ export function RegisterForm() {
       {step === 1 ? (
         <div key="step-name" className="auth-slide-enter">
           <p className="mb-6 text-[11px] leading-relaxed text-secondary">
-            OTP <HoraBadge /> place votre identité sous votre contrôle.
-            Identifiez votre nom et prénom pour commencer.
+            {t("auth.register.ctx").split("Hora")[0]}<HoraBadge />{t("auth.register.ctx").split("Hora")[1]}
           </p>
 
           <form
@@ -136,7 +175,7 @@ export function RegisterForm() {
           >
             <div>
               <Label htmlFor="reg-nom" className="text-[11px]">
-                Nom
+                {t("common.name")}
               </Label>
               <Input
                 id="reg-nom"
@@ -153,7 +192,7 @@ export function RegisterForm() {
             </div>
             <div>
               <Label htmlFor="reg-prenom" className="text-[11px]">
-                Prénom
+                {t("common.firstname")}
               </Label>
               <Input
                 id="reg-prenom"
@@ -173,16 +212,71 @@ export function RegisterForm() {
               className="h-9 w-full gap-2 text-xs"
               loading={nameForm.formState.isSubmitting}
             >
-              Continuer
+              {t("common.continue")}
               <IconArrowRight className="size-3.5" />
             </Button>
+          </form>
+        </div>
+      ) : step === 2 ? (
+        <div key="step-phone" className="auth-slide-enter">
+          <p className="mb-6 text-[11px] leading-relaxed text-secondary">
+            {t("auth.register.phoneCtx").split("Hora")[0]}<HoraBadge />{t("auth.register.phoneCtx").split("Hora")[1]}
+          </p>
+
+          <form
+            className="space-y-2.5"
+            onSubmit={phoneForm.handleSubmit(onPhoneSubmit)}
+            noValidate
+          >
+            <div>
+              <Label htmlFor="reg-phone" className="text-[11px]">
+                {t("auth.login.phoneLabel")}
+              </Label>
+              <PhoneInput
+                id="reg-phone"
+                value={phoneForm.watch("phone") ?? ""}
+                onChange={(e164) =>
+                  phoneForm.setValue("phone", e164, {
+                    shouldValidate: true,
+                    shouldDirty: true,
+                  })
+                }
+                aria-invalid={Boolean(phoneForm.formState.errors.phone)}
+                placeholder="07 00 00 00 00"
+              />
+              {phoneForm.formState.errors.phone ? (
+                <p className="mt-0.5 text-[11px] text-error" role="alert">
+                  {phoneForm.formState.errors.phone.message}
+                </p>
+              ) : null}
+            </div>
+            <div className="flex items-center justify-center gap-2">
+              <Button
+                type="button"
+                variant="secondary"
+                className="h-9 text-xs"
+                onClick={() => {
+                  setStep(1);
+                  setError(null);
+                }}
+              >
+                {t("common.edit")}
+              </Button>
+              <Button
+                type="submit"
+                className="h-9 gap-2 text-xs"
+                loading={phoneForm.formState.isSubmitting}
+              >
+                {t("common.continue")}
+                <IconArrowRight className="size-3.5" />
+              </Button>
+            </div>
           </form>
         </div>
       ) : (
         <div key="step-pin" className="auth-slide-enter">
           <p className="mb-6 text-[11px] leading-relaxed text-secondary">
-            Protégez votre compte <HoraBadge /> — choisissez un code PIN
-            sécurisé que vous retiendrez facilement.
+            {t("auth.register.pinCtx").split("Hora")[0]}<HoraBadge />{t("auth.register.pinCtx").split("Hora")[1]}
           </p>
 
           <form
@@ -191,7 +285,8 @@ export function RegisterForm() {
             noValidate
           >
             <p className="text-center text-xs text-secondary">
-              Code PIN pour{" "}
+              {t("auth.login.pinLabel")}
+              <br />
               <span className="font-semibold text-foreground">
                 {nameData.prenom} {nameData.nom}
               </span>
@@ -218,18 +313,18 @@ export function RegisterForm() {
                 variant="secondary"
                 className="h-9 text-xs"
                 onClick={() => {
-                  setStep(1);
+                  setStep(2);
                   setError(null);
                 }}
               >
-                Modifier
+                {t("common.edit")}
               </Button>
               <Button
                 type="submit"
                 className="h-9 gap-2 text-xs"
                 loading={pinForm.formState.isSubmitting}
               >
-                Créer mon compte
+                {t("auth.register.submit")}
                 <IconArrowRight className="size-3.5" />
               </Button>
             </div>
@@ -238,12 +333,12 @@ export function RegisterForm() {
       )}
 
       <p className="text-center text-xs text-secondary">
-        Déjà inscrit ?{" "}
+        {t("auth.register.alreadyIn")}{" "}
         <Link
           href="/login"
           className="font-medium text-primary underline-offset-4 hover:underline"
         >
-          Se connecter
+          {t("auth.login.submit")}
         </Link>
       </p>
 
@@ -253,7 +348,7 @@ export function RegisterForm() {
           className="inline-flex items-center gap-1.5 rounded-full border border-border/70 px-3.5 py-1.5 text-[11px] font-medium text-secondary transition-all duration-300 hover:-translate-y-px hover:border-primary/40 hover:text-primary"
         >
           <IconBuilding className="size-3.5" />
-          Inscription entreprise
+          {t("auth.register.entLink")}
         </Link>
       </div>
     </div>

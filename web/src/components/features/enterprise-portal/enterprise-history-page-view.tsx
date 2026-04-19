@@ -1,5 +1,6 @@
 "use client";
 
+import { useI18n } from "@/components/providers/i18n-provider";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorBanner } from "@/components/ui/error-banner";
 import { PageHeader } from "@/components/ui/page-header";
@@ -32,6 +33,7 @@ function IconLogin(p: SVGProps<SVGSVGElement>) {
 const FILTERS = ["Tous", "Aujourd'hui", "7 jours"] as const;
 
 export function EnterpriseHistoryPageView() {
+  const { t } = useI18n();
   const { data: history = [], isLoading } = useQuery({
     queryKey: ["enterprise", "login-history"],
     queryFn: async () => {
@@ -68,8 +70,8 @@ export function EnterpriseHistoryPageView() {
   return (
     <div className="w-full space-y-6">
       <PageHeader
-        title="Historique d'accès"
-        description="Consultez les dernières connexions de l'entreprise."
+        title={t("history.title")}
+        description={t("history.desc")}
       />
 
       <ErrorBanner error={error} />
@@ -85,18 +87,19 @@ export function EnterpriseHistoryPageView() {
       <SearchFilter
         search={search}
         onSearchChange={setSearch}
-        placeholder="Rechercher par label ou appareil…"
+        placeholder={t("devices.search")}
         filters={FILTERS}
         activeFilter={filter}
         onFilterChange={setFilter}
+        grow
       />
 
       <div className="space-y-1.5">
         {filtered.length === 0 ? (
           <div className="rounded-lg border border-neutral-200 bg-white py-10 dark:border-zinc-700 dark:bg-zinc-900">
             <EmptyState
-              title="Aucune connexion"
-              description="Aucune connexion enregistrée pour votre compte."
+              title={t("history.empty.title")}
+              description={t("history.empty.desc")}
             />
           </div>
         ) : (

@@ -68,3 +68,59 @@ export function isValidUuid(value: string): boolean {
     value,
   );
 }
+
+export type LinkStatus = "pending" | "approved" | "rejected";
+
+export type UserLinkItem = {
+  link_id: string;
+  company_id: string;
+  nom_entreprise: string;
+  status: LinkStatus;
+  created_at?: string;
+  updated_at?: string;
+};
+
+/** GET /api/me/links — historique côté utilisateur, filtrable. */
+export async function listUserLinks(
+  getToken: () => string | null,
+  status?: LinkStatus,
+): Promise<UserLinkItem[]> {
+  const { request } = createHttpClient({
+    getToken,
+    onUnauthorized: tryRefreshUserSession,
+  });
+  const path = status
+    ? `${endpoints.meLinks}?status=${encodeURIComponent(status)}`
+    : endpoints.meLinks;
+  const raw = await request<ApiEnvelope<UserLinkItem[]>>("GET", path);
+  const list = unwrap(raw);
+  return Array.isArray(list) ? list : [];
+}
+
+export type EnterpriseLinkItem = {
+  link_id: string;
+  user_id: string;
+  user?: {
+    user_id?: string;
+    user_key?: string;
+    nom?: string;
+    prenom?: string;
+  };
+  status: LinkStatus;
+  created_at?: string;
+  updated_at?: string;
+};
+
+/** GET /api/enterprises/me/links — historique côté entreprise. */
+export async function listEnterpriseLinks(
+  getToken: () => string | null,
+  status?: LinkStatus,
+): Promise<EnterpriseLinkItem[]> {
+  const { request } = createHttpClient({ getToken });
+  const path = status
+    ? `${endpoints.enterprisesLinks}?status=${encodeURIComponent(status)}`
+    : endpoints.enterprisesLinks;
+  const raw = await request<ApiEnvelope<EnterpriseLinkItem[]>>("GET", path);
+  const list = unwrap(raw);
+  return Array.isArray(list) ? list : [];
+}

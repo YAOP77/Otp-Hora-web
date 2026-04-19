@@ -1,9 +1,10 @@
 "use client";
 
+import { useI18n } from "@/components/providers/i18n-provider";
 import { useTheme } from "@/components/providers/theme-provider";
+import type { TranslationKey } from "@/lib/i18n/translations";
 import Image from "next/image";
 import Link from "next/link";
-import { useState } from "react";
 import type { SVGProps } from "react";
 
 function IconSun(props: SVGProps<SVGSVGElement>) {
@@ -42,19 +43,19 @@ export type AuthVariant = "user" | "enterprise";
 
 export function AuthShell({
   children,
-  title,
-  subtitle,
+  titleKey,
+  subtitleKey,
   backHref = "/",
   variant = "user",
 }: {
   children: React.ReactNode;
-  title: string;
-  subtitle: string;
+  titleKey: TranslationKey;
+  subtitleKey: TranslationKey;
   backHref?: string;
   variant?: AuthVariant;
 }) {
   const { theme, toggleTheme, mounted } = useTheme();
-  const [lang, setLang] = useState<"fr" | "en">("fr");
+  const { lang, toggleLang, t } = useI18n();
   const isDark = mounted && theme === "dark";
 
   const vectorClass =
@@ -84,10 +85,10 @@ export function AuthShell({
             className="h-16 w-auto"
           />
           <h1 className="mt-8 text-3xl font-extrabold tracking-tight text-white lg:text-4xl">
-            {title}
+            {t(titleKey)}
           </h1>
           <p className="mt-4 max-w-sm text-sm leading-relaxed text-white/55">
-            {subtitle}
+            {t(subtitleKey)}
           </p>
 
           <div className="pointer-events-none absolute inset-0" aria-hidden>
@@ -133,8 +134,8 @@ export function AuthShell({
             <button
               type="button"
               onClick={toggleTheme}
-              aria-label={isDark ? "Mode clair" : "Mode sombre"}
-              title={isDark ? "Mode clair" : "Mode sombre"}
+              aria-label={isDark ? t("common.theme.light") : t("common.theme.dark")}
+              title={isDark ? t("common.theme.light") : t("common.theme.dark")}
               className="inline-flex size-8 items-center justify-center rounded-full border border-border/60 text-secondary transition-all duration-300 hover:-translate-y-px hover:border-primary/50 hover:text-primary"
             >
               {isDark ? (
@@ -145,9 +146,9 @@ export function AuthShell({
             </button>
             <button
               type="button"
-              onClick={() => setLang((l) => (l === "fr" ? "en" : "fr"))}
-              aria-label="Changer la langue"
-              title={lang === "fr" ? "Français" : "English"}
+              onClick={toggleLang}
+              aria-label={t("header.changeLanguage")}
+              title={lang === "fr" ? t("common.lang.fr") : t("common.lang.en")}
               className="inline-flex h-8 items-center gap-1 rounded-full border border-border/60 px-2.5 text-[10px] font-bold uppercase tracking-wide text-secondary transition-all duration-300 hover:-translate-y-px hover:border-primary/50 hover:text-primary"
             >
               <IconGlobe className="size-[14px]" />
@@ -161,7 +162,7 @@ export function AuthShell({
             {/* Bouton retour */}
             <Link
               href={backHref}
-              title="Retour à l'accueil"
+              title={t("auth.back.home")}
               className="mb-6 inline-flex size-10 items-center justify-center rounded-full border border-border/70 text-secondary transition-all duration-300 hover:border-transparent hover:bg-[#061C38] hover:text-white"
             >
               <IconArrowLeft className="size-[18px]" />

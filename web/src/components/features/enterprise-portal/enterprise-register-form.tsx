@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { ErrorBanner } from "@/components/ui/error-banner";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { PhoneInput } from "@/components/ui/phone-input";
 import { PinInput } from "@/components/ui/pin-input";
 import { registerEnterpriseDevice } from "@/lib/api/devices";
 import { registerEnterprise } from "@/lib/api/enterprises";
@@ -148,12 +149,17 @@ export function EnterpriseRegisterForm() {
               <Label htmlFor="reg-ent-phone" className="text-[11px]">
                 Téléphone
               </Label>
-              <Input
+              <PhoneInput
                 id="reg-ent-phone"
-                type="tel"
-                placeholder="+33 1 23 45 67 89"
-                className="h-9 text-xs"
-                {...infoForm.register("phone")}
+                value={infoForm.watch("phone") ?? ""}
+                onChange={(e164) =>
+                  infoForm.setValue("phone", e164, {
+                    shouldValidate: true,
+                    shouldDirty: true,
+                  })
+                }
+                aria-invalid={Boolean(infoForm.formState.errors.phone)}
+                placeholder="01 23 45 67 89"
               />
               {infoForm.formState.errors.phone ? (
                 <p className="mt-0.5 text-[11px] text-error" role="alert">

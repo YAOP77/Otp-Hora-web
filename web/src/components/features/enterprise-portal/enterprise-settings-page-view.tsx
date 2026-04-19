@@ -1,6 +1,7 @@
 "use client";
 
 import { IconChevronRight } from "@/components/features/dashboard/icons";
+import { useI18n } from "@/components/providers/i18n-provider";
 import { Button } from "@/components/ui/button";
 import { ErrorBanner } from "@/components/ui/error-banner";
 import { Input } from "@/components/ui/input";
@@ -108,6 +109,42 @@ function ToggleRow({
   );
 }
 
+function LanguageRow({ title, description }: { title: string; description: string }) {
+  const { lang, setLang } = useI18n();
+  return (
+    <div className="flex items-center justify-between gap-3 px-3 py-2">
+      <div className="min-w-0 flex-1">
+        <p className="text-[13px] font-medium leading-snug text-foreground">{title}</p>
+        <p className="mt-0.5 text-xs leading-snug text-secondary">{description}</p>
+      </div>
+      <div className="inline-flex shrink-0 rounded-lg border border-border bg-background p-0.5 text-[11px] font-bold">
+        <button
+          type="button"
+          onClick={() => setLang("fr")}
+          className={`rounded-md px-2.5 py-1 transition-colors ${
+            lang === "fr"
+              ? "bg-[#0B3A6E] text-white"
+              : "text-secondary hover:text-foreground"
+          }`}
+        >
+          FR
+        </button>
+        <button
+          type="button"
+          onClick={() => setLang("en")}
+          className={`rounded-md px-2.5 py-1 transition-colors ${
+            lang === "en"
+              ? "bg-[#0B3A6E] text-white"
+              : "text-secondary hover:text-foreground"
+          }`}
+        >
+          EN
+        </button>
+      </div>
+    </div>
+  );
+}
+
 function DangerRow({ title, description, onAction }: { title: string; description: string; onAction: () => void }) {
   return (
     <div className="flex flex-col gap-2 px-3 py-2 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
@@ -154,6 +191,7 @@ function IconSave(p: SVGProps<SVGSVGElement>) {
 export function EnterpriseSettingsPageView() {
   const { isLoading } = useEnterpriseQuery();
   const router = useRouter();
+  const { t } = useI18n();
   const { toast } = useToast();
 
   const [error] = useState<unknown>(null);
@@ -259,15 +297,16 @@ export function EnterpriseSettingsPageView() {
 
         <PairCard>
           <ToggleRow
-            title="Notifications"
+            title={t("settings.notifications")}
             description={notifDesc}
             on={notifications}
             hydrated={hydrated}
             onToggle={() => persistNotif(!notifications)}
           />
+          <LanguageRow title={t("settings.language")} description={t("settings.languageDesc")} />
           <ClickRow
-            title="FAQ"
-            description="Réponses aux questions courantes sur OTP Hora."
+            title={t("settings.faq")}
+            description={t("settings.faqDesc")}
             onClick={() => setFaqOpen(true)}
           />
         </PairCard>

@@ -2,12 +2,14 @@
 
 import { EnterpriseProfileCard } from "@/components/features/enterprise-portal/enterprise-profile-card";
 import { ShortcutTile } from "@/components/features/dashboard/shortcut-tile";
+import { useI18n } from "@/components/providers/i18n-provider";
 import { useEnterpriseQuery } from "@/hooks/use-enterprise-query";
 import { dashboardAssets } from "@/lib/config/dashboard-assets";
 import Link from "next/link";
 import { useMemo } from "react";
 
 export function EnterpriseDashboardHomeView() {
+  const { t } = useI18n();
   const { data: enterprise, isLoading, isError } = useEnterpriseQuery();
 
   const ent = useMemo(() => (enterprise ?? {}) as Record<string, unknown>, [enterprise]);
@@ -18,7 +20,7 @@ export function EnterpriseDashboardHomeView() {
     <div className="w-full">
       <header className="mb-8 md:mb-10">
         <h1 className="text-2xl font-semibold tracking-tight text-[#0B3A6E] dark:text-white md:text-3xl">
-          Espace entreprise
+          {t("ent.space")}
         </h1>
       </header>
 
@@ -40,13 +42,13 @@ export function EnterpriseDashboardHomeView() {
                 <circle cx="12" cy="12" r="10" />
                 <path d="M12 16v-4M12 8h.01" />
               </svg>
-              <span>Configurez votre email de récupération pour sécuriser votre compte.</span>
+              <span>{t("account.bandMissingEmail")}</span>
             </div>
             <Link
               href="/portail-entreprise/account"
               className="shrink-0 rounded-lg border border-white/30 bg-white/10 px-3 py-1.5 text-xs font-bold transition-all hover:bg-white/20"
             >
-              Mise à jour
+              {t("common.edit")}
             </Link>
           </div>
         ) : null}
@@ -56,7 +58,7 @@ export function EnterpriseDashboardHomeView() {
             id="enterprise-heading"
             className="text-xs font-semibold uppercase tracking-wider text-[#0B3A6E]/80 dark:text-white/60"
           >
-            Profil entreprise
+            {t("ent.profile")}
           </h2>
           <EnterpriseProfileCard enterprise={enterprise} isLoading={isLoading} />
         </section>
@@ -66,31 +68,31 @@ export function EnterpriseDashboardHomeView() {
             id="shortcuts-heading"
             className="text-xs font-semibold uppercase tracking-wider text-[#0B3A6E]/80 dark:text-white/60"
           >
-            Modules de gestion
+            {t("ent.modules")}
           </h2>
           <div className="shortcut-tiles-grid grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4">
             <ShortcutTile
-              title="Compte"
+              title={t("nav.account")}
               imageSrc={dashboardAssets.shortcutProfile}
-              imageAlt="Compte entreprise"
+              imageAlt=""
               href="/portail-entreprise/account"
             />
             <ShortcutTile
-              title="Utilisateurs liés"
+              title={t("nav.linkedUsers")}
               imageSrc={dashboardAssets.shortcutSecurity}
-              imageAlt="Utilisateurs liés"
+              imageAlt=""
               href="/portail-entreprise/users"
             />
             <ShortcutTile
-              title="Historique d'accès"
+              title={t("nav.accessHistory")}
               imageSrc={dashboardAssets.shortcutDevices}
-              imageAlt="Historique d'accès"
+              imageAlt=""
               href="/portail-entreprise/history"
             />
             <ShortcutTile
-              title="Besoin d'aide ?"
+              title={t("ent.help")}
               imageSrc={dashboardAssets.shortcutHelp}
-              imageAlt="Aide"
+              imageAlt=""
               href="/portail-entreprise/settings"
             />
           </div>

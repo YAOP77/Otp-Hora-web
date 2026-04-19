@@ -1,5 +1,6 @@
 "use client";
 
+import { useI18n } from "@/components/providers/i18n-provider";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorBanner } from "@/components/ui/error-banner";
@@ -32,6 +33,7 @@ type HistoryEntry = {
 const FILTERS = ["Tous", "Aujourd'hui", "7 jours"] as const;
 
 export function DevicesPageView() {
+  const { t } = useI18n();
   const { isError: userErr, error: userError } = useUserQuery();
   const {
     data: historyRaw,
@@ -74,8 +76,8 @@ export function DevicesPageView() {
   return (
     <div className="w-full space-y-6">
       <PageHeader
-        title="Historique de connexion"
-        description="Vos connexions récentes et la gestion de vos appareils."
+        title={t("devices.title")}
+        description={t("devices.desc")}
       />
 
       <ErrorBanner error={apiError} />
@@ -84,13 +86,14 @@ export function DevicesPageView() {
         <SearchFilter
           search={search}
           onSearchChange={setSearch}
-          placeholder="Rechercher par label ou appareil…"
+          placeholder={t("devices.search")}
           filters={FILTERS}
           activeFilter={filter}
           onFilterChange={setFilter}
+          grow
         />
         <Button type="button" variant="secondary" className="h-8 shrink-0 text-xs" onClick={() => void refetchHistory()}>
-          Rafraîchir
+          {t("devices.refresh")}
         </Button>
       </div>
 
@@ -105,7 +108,7 @@ export function DevicesPageView() {
           <>
           {filtered.length === 0 ? (
             <div className="rounded-lg border border-neutral-200 bg-white py-10 dark:border-zinc-700 dark:bg-zinc-900">
-              <EmptyState title="Aucune connexion" description="Aucune connexion enregistrée." />
+              <EmptyState title={t("devices.empty.title")} description={t("devices.empty.desc")} />
             </div>
           ) : (
             filtered.map((entry, i) => {

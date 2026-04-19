@@ -88,6 +88,16 @@ export async function listUserLoginHistory(getToken: () => string | null): Promi
   return request<unknown>("GET", endpoints.usersLoginHistory);
 }
 
+/** GET /api/users/me/user-key — identifiant public utilisateur (ex: "x-th-a1b2c"). */
+export async function getUserKey(
+  getToken: () => string | null,
+): Promise<string | null> {
+  const { request } = client(getToken);
+  const raw = await request<unknown>("GET", endpoints.usersMeUserKey);
+  const data = unwrapApiData<{ user_key?: unknown }>(raw);
+  return typeof data?.user_key === "string" ? data.user_key : null;
+}
+
 export async function fetchUser(
   userId: string,
   getToken: () => string | null,

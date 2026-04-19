@@ -121,3 +121,33 @@ export async function setEnterprisePIN(
   return updateEnterpriseMe(payload, getToken);
 }
 
+/** GET /api/enterprises/me/api-key — peut renvoyer 410 API_KEY_NOT_RETRIEVABLE
+ *  si le compte a été créé avant le stockage chiffré. Dans ce cas, utilisez
+ *  `rotateEnterpriseApiKey()` pour régénérer une nouvelle clé. */
+export async function getEnterpriseApiKey(
+  getToken: () => string | null,
+): Promise<string | null> {
+  const { request } = client(getToken);
+  const raw = await request<unknown>("GET", endpoints.enterprisesApiKey);
+  if (raw && typeof raw === "object" && "data" in raw) {
+    const data = (raw as { data?: { api_key?: unknown } }).data;
+    if (data && typeof data.api_key === "string") return data.api_key;
+  }
+  return null;
+}
+
+/** POST /api/enterprises/me/api-key/rotate — régénère la clé API (affichée une seule fois). */
+export async function rotateEnterpriseApiKey(
+  getToken: () => string | null,
+): Promise<string | null> {
+  const { request } = client(getToken);
+  const raw = await request<unknown>("POST", endpoints.enterprisesApiKeyRotate, {
+    json: {},
+  });
+  if (raw && typeof raw === "object" && "data" in raw) {
+    const data = (raw as { data?: { api_key?: unknown } }).data;
+    if (data && typeof data.api_key === "string") return data.api_key;
+  }
+  return null;
+}
+

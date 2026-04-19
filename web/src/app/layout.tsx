@@ -1,4 +1,5 @@
 import { CookieConsent } from "@/components/features/marketing/cookie-consent";
+import { I18nProvider } from "@/components/providers/i18n-provider";
 import { QueryProvider } from "@/components/providers/query-provider";
 import { ThemeProvider } from "@/components/providers/theme-provider";
 import { ToastProvider } from "@/components/ui/toast";
@@ -27,7 +28,9 @@ export const metadata: Metadata = {
     type: "website",
   },
   icons: {
-    icon: [{ url: "/next.svg", type: "image/svg+xml" }],
+    icon: [{ url: "/assets/image%20app/Hora-Logo.png", type: "image/png" }],
+    shortcut: "/assets/image%20app/Hora-Logo.png",
+    apple: "/assets/image%20app/Hora-Logo.png",
   },
 };
 
@@ -40,12 +43,14 @@ export default function RootLayout({
     <html lang="fr" suppressHydrationWarning>
       <body className={`${plusJakartaSans.variable} antialiased`}>
         <ThemeProvider>
-          <QueryProvider>
-            <ToastProvider>
-              {children}
-              <CookieConsent />
-            </ToastProvider>
-          </QueryProvider>
+          <I18nProvider>
+            <QueryProvider>
+              <ToastProvider>
+                {children}
+                <CookieConsent />
+              </ToastProvider>
+            </QueryProvider>
+          </I18nProvider>
         </ThemeProvider>
       </body>
     </html>

@@ -8,11 +8,12 @@ import { Modal } from "@/components/ui/modal";
 import { PageHeader } from "@/components/ui/page-header";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/components/ui/toast";
+import { useI18n } from "@/components/providers/i18n-provider";
+import { KeyField } from "@/components/ui/key-field";
 import { useUserQuery } from "@/hooks/use-user-query";
-import { createContact } from "@/lib/api/contacts";
-import { setUserRecoveryEmail, updateUserProfile } from "@/lib/api/users";
+import { getUserKey, setUserRecoveryEmail, updateUserProfile } from "@/lib/api/users";
 import { getAccessToken } from "@/lib/auth/session";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import Image from "next/image";
 import type { SVGProps } from "react";
 import { useCallback, useEffect, useState } from "react";
@@ -48,6 +49,7 @@ function IconInfo(p: SVGProps<SVGSVGElement>) {
 const HAPPY_IMG = "/assets/image%20accueil/Happy%20Bunch%20-%20Chat.png";
 
 export default function AccountPage() {
+  const { t } = useI18n();
   const [mounted, setMounted] = useState(false);
   useEffect(() => { setMounted(true); }, []);
 
@@ -62,6 +64,13 @@ export default function AccountPage() {
   const email = (data as Record<string, unknown> | undefined)?.email as string | undefined ?? "Non configuré";
   const recoveryEmail = (data as Record<string, unknown> | undefined)?.recovery_email as string | undefined ?? "";
   const hasRecoveryEmail = recoveryEmail.length > 0;
+
+  /* ── user-key (identifiant public) ─── */
+  const { data: userKey } = useQuery({
+    queryKey: ["user", "user-key"],
+    queryFn: () => getUserKey(getAccessToken),
+    enabled: mounted && Boolean(userId),
+  });
 
   /* ── Edit modal ──────────────────── */
   const [editOpen, setEditOpen] = useState(false);
@@ -110,32 +119,17 @@ export default function AccountPage() {
     onError: (err) => setRecoveryError(err),
   });
 
-  /* ── Add contact modal ───────────── */
-  const [contactOpen, setContactOpen] = useState(false);
-  const [contactPhone, setContactPhone] = useState("");
-  const [contactError, setContactError] = useState<unknown>(null);
-
-  const contactMutation = useMutation({
-    mutationFn: () => createContact({ user_id: userId, phone_number: contactPhone.trim() }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["user", userId] });
-      setContactOpen(false);
-      toast("Contact ajouté.");
-    },
-    onError: (err) => setContactError(err),
-  });
-
   const infoRows = [
-    { icon: IconUser, label: "Nom complet", value: fullName },
-    { icon: IconCheck, label: "Statut", value: status },
-    { icon: IconPhone, label: "Téléphone", value: phone },
-    { icon: IconMail, label: "Email", value: email },
+    { icon: IconUser, label: t("account.fullName"), value: fullName },
+    { icon: IconCheck, label: t("common.status"), value: status },
+    { icon: IconPhone, label: t("common.phone"), value: phone },
+    { icon: IconMail, label: t("common.email"), value: email },
   ];
 
   return (
     <div className="flex w-full gap-6">
       <div className="min-w-0 flex-1">
-        <PageHeader title="Compte" description="Consultez et modifiez les informations de votre profil." />
+        <PageHeader title={t("account.title")} description={t("account.subtitle")} />
 
         {!mounted || isLoading ? (
           <div className="space-y-3">
@@ -149,17 +143,17 @@ export default function AccountPage() {
             {!hasRecoveryEmail ? (
               <div className="flex items-center gap-2 rounded-lg border border-amber-400/50 bg-amber-500/90 px-4 py-2.5 text-sm font-medium text-white">
                 <IconInfo className="size-4 shrink-0" />
-                Veuillez enregistrer un email de récupération pour sécuriser votre compte.
+                {t("account.bandMissingEmail")}
               </div>
             ) : null}
 
             <section className="max-w-2xl rounded-lg border border-neutral-200 bg-white p-5 dark:border-zinc-700 dark:bg-zinc-900 sm:p-6">
               <div className="flex items-start justify-between">
-                <h2 className="text-base font-bold text-foreground">Informations du profil</h2>
+                <h2 className="text-base font-bold text-foreground">{t("account.info")}</h2>
                 {userId ? (
                   <button type="button" onClick={openEdit} className="inline-flex items-center gap-1.5 rounded-lg border border-[#0B3A6E]/30 bg-[#0B3A6E]/5 px-3 py-1.5 text-xs font-semibold text-[#0B3A6E] transition-all duration-300 hover:bg-[#0B3A6E] hover:text-white dark:border-white/20 dark:bg-white/5 dark:text-white dark:hover:bg-white/15">
                     <IconPen className="size-3.5" />
-                    Modifier le profil
+                    {t("account.editProfile")}
                   </button>
                 ) : null}
               </div>
@@ -174,39 +168,42 @@ export default function AccountPage() {
                   </li>
                 ))}
               </ul>
+
+              {userKey ? (
+                <div className="mt-5 border-t border-neutral-200 pt-4 dark:border-zinc-700">
+                  <p className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-secondary">
+                    {t("account.userKeyLabel")}
+                  </p>
+                  <KeyField
+                    label={t("account.userKeyLabel")}
+                    value={userKey}
+                    copyMessage={t("account.copyMessage.userKey")}
+                  />
+                </div>
+              ) : null}
             </section>
 
             <section className="max-w-2xl rounded-lg border border-neutral-200 bg-white p-5 dark:border-zinc-700 dark:bg-zinc-900 sm:p-6">
               {hasRecoveryEmail ? (
                 <div className="mb-4 flex items-center gap-2 rounded-lg bg-green-50 px-3 py-2 text-xs font-medium text-green-800 dark:bg-green-950/40 dark:text-green-300">
                   <svg viewBox="0 0 24 24" className="size-3.5 shrink-0" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden><path d="M20 6 9 17l-5-5" /></svg>
-                  L&apos;email de récupération est enregistré.
+                  {t("account.recoveryConfigured")}
                 </div>
               ) : null}
-              <h2 className="text-base font-bold text-foreground">Email de récupération</h2>
+              <h2 className="text-base font-bold text-foreground">{t("account.recoveryEmail")}</h2>
               <p className="mt-1 text-xs text-secondary">
-                {hasRecoveryEmail ? "Cet email est utilisé pour récupérer l'accès à votre compte." : "Ajoutez un email de récupération pour sécuriser votre compte."}
+                {hasRecoveryEmail ? t("account.recoveryDesc") : t("account.recoveryMissing")}
               </p>
               {hasRecoveryEmail ? (
                 <div className="mt-4"><Input value={recoveryEmail} disabled className="h-9 max-w-sm bg-neutral-100 text-xs dark:bg-zinc-800" /></div>
               ) : (
                 <button type="button" onClick={() => { setRecoveryInput(""); setRecoveryError(null); setRecoveryOpen(true); }} className="mt-4 inline-flex items-center gap-1.5 rounded-lg bg-[#0B3A6E] px-4 py-2 text-xs font-bold text-white transition-all duration-300 hover:-translate-y-px hover:bg-[#0B3A6E]/90">
                   <IconPlus className="size-3.5" />
-                  Ajouter un email
+                  {t("account.addEmail")}
                 </button>
               )}
             </section>
 
-            {userId ? (
-              <section className="max-w-2xl rounded-lg border border-neutral-200 bg-white p-5 dark:border-zinc-700 dark:bg-zinc-900 sm:p-6">
-                <h2 className="text-base font-bold text-foreground">Ajouter un contact</h2>
-                <p className="mt-1 text-xs text-secondary">Ajoutez un numéro de téléphone au format international.</p>
-                <button type="button" onClick={() => { setContactPhone(""); setContactError(null); setContactOpen(true); }} className="mt-4 inline-flex items-center gap-1.5 rounded-lg bg-[#0B3A6E] px-4 py-2 text-xs font-bold text-white transition-all duration-300 hover:-translate-y-px hover:bg-[#0B3A6E]/90">
-                  <IconPlus className="size-3.5" />
-                  Ajouter un contact
-                </button>
-              </section>
-            ) : null}
           </div>
         )}
       </div>
@@ -231,12 +228,6 @@ export default function AccountPage() {
         </div>
       </Modal>
 
-      <Modal open={contactOpen} onClose={() => setContactOpen(false)} title="Ajouter un contact" footer={<><Button variant="secondary" className="h-9 gap-1.5 text-xs" onClick={() => setContactOpen(false)}><IconX className="size-3.5" />Annuler</Button><Button className="h-9 gap-1.5 bg-[#0B3A6E] text-xs hover:bg-[#0B3A6E]/90" onClick={() => contactMutation.mutate()} loading={contactMutation.isPending} disabled={!contactPhone.trim() || contactPhone.trim().length < 5}><IconSave className="size-3.5" />Ajouter</Button></>}>
-        <div className="space-y-3">
-          {contactError ? <ErrorBanner error={contactError} /> : null}
-          <div><Label htmlFor="contact-phone" className="text-[11px]">Téléphone (E.164)</Label><Input id="contact-phone" type="tel" value={contactPhone} onChange={(e) => setContactPhone(e.target.value)} className="h-9 text-xs" placeholder="+225 …" /></div>
-        </div>
-      </Modal>
     </div>
   );
 }

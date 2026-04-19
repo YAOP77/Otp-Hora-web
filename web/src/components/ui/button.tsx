@@ -49,22 +49,21 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       <button
         ref={ref}
         type={props.type ?? "button"}
-        className={classes}
+        className={`${classes} btn-loading-container`}
         disabled={disabled || loading}
         aria-busy={loading || undefined}
+        data-loading={loading ? "true" : undefined}
         {...props}
       >
+        {children}
         {loading ? (
-          <span className="inline-flex items-center gap-2">
-            <span
-              className="size-4 animate-spin rounded-full border-2 border-current border-t-transparent"
-              aria-hidden
-            />
+          <span className="btn-loading-dots" aria-hidden>
+            <span className="btn-dot" />
+            <span className="btn-dot" />
+            <span className="btn-dot" />
             <span className="sr-only">Chargement</span>
           </span>
-        ) : (
-          children
-        )}
+        ) : null}
       </button>
     );
   },

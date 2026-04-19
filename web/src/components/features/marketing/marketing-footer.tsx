@@ -2,6 +2,7 @@
 
 import { IconArrowLeft } from "@/components/features/marketing/marketing-icons";
 import { SUB_NAV_LINKS } from "@/components/features/marketing/marketing-header";
+import { useI18n } from "@/components/providers/i18n-provider";
 import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
@@ -15,6 +16,7 @@ const legalLinks = [
 type Step = "email" | "message" | "done";
 
 export function MarketingFooter() {
+  const { t } = useI18n();
   const [step, setStep] = useState<Step>("email");
   const [email, setEmail] = useState("");
   const [message, setMessage] = useState("");
@@ -173,7 +175,7 @@ export function MarketingFooter() {
                     href={item.href}
                     className="underline-offset-4 transition hover:text-white hover:underline"
                   >
-                    {item.label}
+                    {t(item.labelKey)}
                   </a>
                 </li>
               ))}

@@ -27,6 +27,8 @@ type SearchFilterProps = {
   filters: readonly string[];
   activeFilter: string;
   onFilterChange: (v: string) => void;
+  /** Si vrai, l'input prend toute la largeur disponible (pas de max-w-xs). */
+  grow?: boolean;
 };
 
 export function SearchFilter({
@@ -36,6 +38,7 @@ export function SearchFilter({
   filters,
   activeFilter,
   onFilterChange,
+  grow = false,
 }: SearchFilterProps) {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -54,7 +57,7 @@ export function SearchFilter({
   return (
     <div className="flex items-center gap-1.5">
       {/* Search input */}
-      <div className="relative max-w-xs flex-1">
+      <div className={`relative flex-1 ${grow ? "" : "max-w-xs"}`}>
         <IconSearch className="pointer-events-none absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-secondary" />
         <input
           type="search"

@@ -18,8 +18,8 @@ export function EnterpriseRouteShell({ children }: { children: React.ReactNode }
   if (isPublic) {
     return (
       <AuthShell
-        title="Portail Entreprise"
-        subtitle="Espace réservé aux comptes entreprise — gérez vos liaisons, autorisations et clés API depuis une interface dédiée."
+        titleKey="auth.enterprise.title"
+        subtitleKey="auth.enterprise.sub"
         backHref="/"
         variant="enterprise"
       >
