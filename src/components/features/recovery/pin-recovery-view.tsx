@@ -4,16 +4,20 @@ import { Button } from "@/components/ui/button";
 import { ErrorBanner } from "@/components/ui/error-banner";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { PhoneInput } from "@/components/ui/phone-input";
 import { PinInput } from "@/components/ui/pin-input";
-import { confirmEnterprisePinRecovery, confirmUserPinRecovery, requestEnterprisePinRecovery, requestUserPinRecovery } from "@/lib/api/pin-recovery";
-import { isApiConfigured } from "@/lib/config/env";
+import { normalizeSecurityAnswer } from "@/lib/utils/security-answer";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
 const phoneSchema = z.object({
-  phone: z.string().min(5, "Numéro requis").max(30),
+  phone: z
+    .string()
+    .min(8, "Numéro trop court")
+    .max(20, "Numéro trop long")
+    .regex(/^\+\d{7,18}$/, "Numéro invalide (format E.164, ex. +225…)"),
 });
 
 const recoverySchema = z.object({
@@ -71,7 +75,10 @@ export function PinRecoveryView() {
       const { confirmPinRecovery } = await import("@/lib/api/users");
       await confirmPinRecovery({
         user_id: userId!,
-        answers: values.answers.map((a: any) => ({ question_id: a.question_id, answer: a.answer })),
+        answers: values.answers.map((a: { question_id: string; answer: string }) => ({
+          question_id: a.question_id,
+          answer: normalizeSecurityAnswer(a.answer),
+        })),
         pin: values.pin,
         pin_confirmation: values.pin_confirmation,
       });
@@ -90,7 +97,15 @@ export function PinRecoveryView() {
         <form className="space-y-4" onSubmit={phoneForm.handleSubmit(onPhoneSubmit)}>
           <div>
             <Label htmlFor="phone">Numéro de téléphone</Label>
-            <Input id="phone" placeholder="+225..." {...phoneForm.register("phone")} />
+            <PhoneInput
+              id="phone"
+              value={phoneForm.watch("phone") ?? ""}
+              onChange={(e164) => phoneForm.setValue("phone", e164, { shouldValidate: true })}
+              placeholder="07 00 00 00 00"
+            />
+            {phoneForm.formState.errors.phone && (
+              <p className="mt-1 text-[11px] text-error">{phoneForm.formState.errors.phone.message}</p>
+            )}
           </div>
           <Button type="submit" className="w-full" loading={phoneForm.formState.isSubmitting}>
             Suivant

@@ -1,8 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { getAccessToken } from "@/lib/auth/session";
+import { createHttpClient } from "@/lib/api/http-client";
 import { fetchUsers } from "@/lib/api/back-office";
+import { getAccessToken } from "@/lib/auth/session";
 import { unwrapApiData } from "@/types/api";
 import Link from "next/link";
 
@@ -23,16 +24,24 @@ export default function AdminDashboard() {
     if (!token) return;
     const getToken = () => token;
 
-    fetchUsers(getToken)
-      .then((raw) => {
-        const users: any[] = unwrapApiData<any[]>(raw) ?? [];
+    const { request } = createHttpClient({ getToken: () => token });
+
+    Promise.all([
+      fetchUsers(getToken)
+        .then((raw) => unwrapApiData<any[]>(raw) ?? [])
+        .catch(() => [] as any[]),
+      request<unknown>("GET", "/api/back-office/enterprises")
+        .then((raw) => unwrapApiData<unknown[]>(raw) ?? [])
+        .catch(() => [] as unknown[]),
+    ])
+      .then(([users, enterprises]) => {
         const active = users.filter((u) => u.status === "active").length;
         const suspended = users.filter((u) => u.status === "suspended" || u.status === "blocked").length;
         setStats({
           total_users: users.length,
           active_users: active,
           suspended_users: suspended,
-          total_enterprises: 0,
+          total_enterprises: enterprises.length,
         });
         setRecentUsers(users.slice(0, 5));
       })

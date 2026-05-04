@@ -15,6 +15,7 @@ import { registerUser } from "@/lib/api/users";
 import { getDeviceRegistrationPayload } from "@/lib/auth/device-context";
 import { getAccessToken, setSession } from "@/lib/auth/session";
 import { isApiConfigured } from "@/lib/config/env";
+import { normalizeSecurityAnswer } from "@/lib/utils/security-answer";
 import { extractAccessToken, extractRefreshToken, extractUserId } from "@/types/api";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
@@ -142,11 +143,11 @@ export function RegisterForm() {
     }
     try {
       const security_questions = [
-        { question: values.q1, answer: values.a1 },
-        { question: values.q2, answer: values.a2 },
-        { question: values.q3, answer: values.a3 },
-        { question: values.q4, answer: values.a4 },
-        { question: values.q5, answer: values.a5 },
+        { question: values.q1.trim(), answer: normalizeSecurityAnswer(values.a1) },
+        { question: values.q2.trim(), answer: normalizeSecurityAnswer(values.a2) },
+        { question: values.q3.trim(), answer: normalizeSecurityAnswer(values.a3) },
+        { question: values.q4.trim(), answer: normalizeSecurityAnswer(values.a4) },
+        { question: values.q5.trim(), answer: normalizeSecurityAnswer(values.a5) },
       ];
 
       const payload = {
