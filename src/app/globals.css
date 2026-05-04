@@ -1,0 +1,383 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+:root {
+  --background: #ffffff;
+  --foreground: #171717;
+  --primary: #0B3A6E;
+  --secondary: #616161;
+  --accent: #0B3A6E;
+  --success: #2e7d32;
+  --error: #c62828;
+  --border: #e5e5e5;
+
+  --dash-sidebar: #f1f1f1;
+  --dash-main: #f1f1f1;
+  --dash-surface: #ffffff;
+  --dash-text: #171717;
+  --dash-muted: #616161;
+  --dash-border: #e4e4e7;
+  --dash-nav-active: rgba(0, 0, 0, 0.06);
+  --dash-nav-hover: rgba(255, 255, 255, 0.85);
+}
+
+.dark {
+  --background: #09090b;
+  --foreground: #fafafa;
+  --secondary: #a1a1aa;
+  --border: #3f3f46;
+
+  --dash-sidebar: #18181b;
+  --dash-main: #18181b;
+  --dash-surface: #27272a;
+  --dash-text: #f1f1f1;
+  --dash-muted: #a1a1aa;
+  --dash-border: #3f3f46;
+  --dash-nav-active: rgba(255, 255, 255, 0.1);
+  --dash-nav-hover: rgba(255, 255, 255, 0.06);
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-primary: var(--primary);
+  --color-secondary: var(--secondary);
+  --color-accent: var(--accent);
+  --color-success: var(--success);
+  --color-error: var(--error);
+  --color-border: var(--border);
+  --font-sans: var(--font-jakarta);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-jakarta), ui-sans-serif, system-ui, sans-serif;
+}
+
+/* ─── Cursor pointer on all interactive elements ─── */
+a, button, [role="button"], [role="switch"], input[type="submit"], input[type="button"],
+select, summary, label[for] {
+  cursor: pointer;
+}
+
+/* ─── Dashboard animations ─── */
+@keyframes dashboard-enter {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.animate-dashboard-enter { animation: dashboard-enter 0.45s ease-out both; }
+
+@keyframes shortcut-tile-enter {
+  from { opacity: 0; transform: translateY(14px) scale(0.985); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .shortcut-tiles-grid .shortcut-tile-card { animation: none !important; }
+}
+.shortcut-tiles-grid .shortcut-tile-card {
+  animation: shortcut-tile-enter 0.58s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.shortcut-tiles-grid .shortcut-tile-card:nth-child(1) { animation-delay: 0.04s; }
+.shortcut-tiles-grid .shortcut-tile-card:nth-child(2) { animation-delay: 0.10s; }
+.shortcut-tiles-grid .shortcut-tile-card:nth-child(3) { animation-delay: 0.16s; }
+.shortcut-tiles-grid .shortcut-tile-card:nth-child(4) { animation-delay: 0.22s; }
+
+/* ─── Landing hero entrance ─── */
+@keyframes landing-fade-down {
+  from { opacity: 0; transform: translateY(-14px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes landing-fade-up {
+  from { opacity: 0; transform: translateY(22px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes landing-fade-up-scale {
+  from { opacity: 0; transform: translateY(28px) scale(0.97); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes landing-fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@keyframes landing-title-slide {
+  from { opacity: 0; transform: translateX(-40px) skewX(-1.5deg); }
+  to   { opacity: 1; transform: translateX(0) skewX(0deg); }
+}
+@keyframes landing-icon-pop {
+  0%   { opacity: 0; transform: scale(0.4) rotate(-15deg); }
+  65%  { transform: scale(1.12) rotate(4deg); }
+  100% { opacity: 1; transform: scale(1) rotate(0deg); }
+}
+
+.landing-hero-label {
+  animation: landing-fade-down 0.6s cubic-bezier(0.22, 1, 0.36, 1) both 0.2s;
+}
+.landing-hero-title {
+  animation: landing-fade-up-scale 0.85s cubic-bezier(0.22, 1, 0.36, 1) both 0.42s;
+}
+.landing-hero-sub {
+  animation: landing-fade-up 0.7s cubic-bezier(0.22, 1, 0.36, 1) both 0.68s;
+}
+.landing-hero-cta {
+  animation: landing-fade-up 0.7s cubic-bezier(0.22, 1, 0.36, 1) both 0.88s;
+}
+.landing-scroll-hint {
+  animation: landing-fade-in 1s ease-out both 1.3s;
+}
+
+/* ─── Landing scroll-triggered ─── */
+[data-animate]:not([data-visible="true"]) { opacity: 0; }
+[data-animate="fade-up"][data-visible="true"] {
+  animation: landing-fade-up 0.72s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+[data-animate="title"][data-visible="true"] {
+  animation: landing-title-slide 0.88s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+[data-animate="icon-pop"][data-visible="true"] {
+  animation: landing-icon-pop 0.62s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+[data-delay="0"]   { animation-delay: 0s !important; }
+[data-delay="100"] { animation-delay: 0.1s !important; }
+[data-delay="120"] { animation-delay: 0.12s !important; }
+[data-delay="200"] { animation-delay: 0.2s !important; }
+[data-delay="220"] { animation-delay: 0.22s !important; }
+[data-delay="240"] { animation-delay: 0.24s !important; }
+[data-delay="320"] { animation-delay: 0.32s !important; }
+[data-delay="360"] { animation-delay: 0.36s !important; }
+[data-delay="440"] { animation-delay: 0.44s !important; }
+[data-delay="480"] { animation-delay: 0.48s !important; }
+
+/* ─── Vector grid (section pro — sombre) ─── */
+.landing-vector-bg {
+  background-color: #030c18;
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.035) 1px, transparent 1px);
+  background-size: 44px 44px;
+}
+
+/* ─── Vector dots (section 3 — Commencer maintenant, fond sombre) ─── */
+.landing-vector-dots {
+  background-image: radial-gradient(circle, rgba(255, 255, 255, 0.06) 1px, transparent 1px);
+  background-size: 22px 22px;
+}
+
+/* ─── Vector dots sur fond bleu foncé (section 3 retravaillée) ─── */
+.landing-vector-dots-blue {
+  background-image: radial-gradient(circle, rgba(255, 255, 255, 0.08) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+
+/* ─── Vector minimaliste FAQ : fines diagonales très discrètes ─── */
+.landing-vector-faq {
+  background-image:
+    linear-gradient(135deg, rgba(11, 58, 110, 0.035) 1px, transparent 1px),
+    linear-gradient(45deg, rgba(11, 58, 110, 0.025) 1px, transparent 1px);
+  background-size: 28px 28px, 56px 56px;
+}
+:is(.dark) .landing-vector-faq {
+  background-image:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.025) 1px, transparent 1px),
+    linear-gradient(45deg, rgba(255, 255, 255, 0.018) 1px, transparent 1px);
+}
+
+/* ─── Vector grid subtil (section 4 — Télécharger) ─── */
+.landing-vector-subtle {
+  background-image:
+    linear-gradient(rgba(0, 0, 0, 0.018) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 0, 0, 0.018) 1px, transparent 1px);
+  background-size: 56px 56px;
+}
+:is(.dark) .landing-vector-subtle {
+  background-image: none;
+}
+
+/* ─── Orbs flottantes section pro ─── */
+@keyframes orb-float-a {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33%      { transform: translate(32px, -22px) scale(1.1); }
+  66%      { transform: translate(-18px, 16px) scale(0.93); }
+}
+@keyframes orb-float-b {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33%      { transform: translate(-26px, 18px) scale(1.08); }
+  66%      { transform: translate(20px, -14px) scale(0.95); }
+}
+@keyframes orb-float-c {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50%      { transform: translate(16px, 24px) scale(1.06); }
+}
+.landing-orb-a { animation: orb-float-a 14s ease-in-out infinite; }
+.landing-orb-b { animation: orb-float-b 11s ease-in-out infinite 1.5s; }
+.landing-orb-c { animation: orb-float-c 17s ease-in-out infinite 3s; }
+
+/* ─── Header nav underline animée ─── */
+.nav-link-animated {
+  position: relative !important;
+}
+.nav-link-animated::after {
+  content: '';
+  position: absolute;
+  bottom: 5px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 1.5px;
+  background-color: var(--primary);
+  border-radius: 1px;
+  transition: width 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.nav-link-animated:hover::after {
+  width: calc(100% - 18px);
+}
+
+/* ─── Auth shell : vector user (dots bleus) ─── */
+.auth-vector-user {
+  background-image: radial-gradient(circle, rgba(91, 155, 230, 0.10) 1px, transparent 1px);
+  background-size: 26px 26px;
+}
+:is(.dark) .auth-vector-user {
+  background-image: radial-gradient(circle, rgba(91, 155, 230, 0.06) 1px, transparent 1px);
+}
+
+/* ─── Auth shell : vector enterprise (grille fine) ─── */
+.auth-vector-enterprise {
+  background-image:
+    linear-gradient(rgba(91, 155, 230, 0.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(91, 155, 230, 0.06) 1px, transparent 1px);
+  background-size: 40px 40px;
+}
+:is(.dark) .auth-vector-enterprise {
+  background-image:
+    linear-gradient(rgba(91, 155, 230, 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(91, 155, 230, 0.04) 1px, transparent 1px);
+}
+
+/* ─── Auth shell : formes décoratives animées ─── */
+@keyframes auth-shape-drift {
+  0%, 100% { transform: rotate(18deg) translate(0, 0); }
+  50%      { transform: rotate(22deg) translate(6px, -8px); }
+}
+@keyframes auth-shape-drift-alt {
+  0%, 100% { transform: rotate(-14deg) translate(0, 0); }
+  50%      { transform: rotate(-10deg) translate(-5px, 6px); }
+}
+.auth-vector-shape     { animation: auth-shape-drift 12s ease-in-out infinite; }
+.auth-vector-shape-alt { animation: auth-shape-drift-alt 15s ease-in-out infinite 2s; }
+
+/* ─── Auth form slide transitions ─── */
+@keyframes auth-slide-in-left {
+  from { opacity: 0; transform: translateX(-30px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+@keyframes auth-slide-out-right {
+  from { opacity: 1; transform: translateX(0); }
+  to   { opacity: 0; transform: translateX(30px); }
+}
+.auth-slide-enter {
+  animation: auth-slide-in-left 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* ─── Cookie consent entrance ─── */
+@keyframes cookie-slide {
+  from { opacity: 0; transform: translateY(24px) scale(0.96); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* ─── Dashboard nav icon hover wobble ─── */
+@keyframes nav-icon-wobble {
+  0%   { transform: rotate(0deg) scale(1); }
+  20%  { transform: rotate(-12deg) scale(1.15); }
+  40%  { transform: rotate(10deg) scale(1.12); }
+  60%  { transform: rotate(-6deg) scale(1.08); }
+  80%  { transform: rotate(3deg) scale(1.03); }
+  100% { transform: rotate(0deg) scale(1); }
+}
+.nav-link-row:hover .nav-icon {
+  animation: nav-icon-wobble 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* ─── Card image hover tilt (Vercel style) ─── */
+@keyframes tile-img-tilt {
+  from { transform: rotate(-10deg) scale(1); }
+  to   { transform: rotate(20deg) scale(1.05); }
+}
+.shortcut-tile-card:hover .shortcut-tile-img {
+  transform: rotate(20deg) scale(1.05);
+}
+.shortcut-tile-img {
+  transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* ─── Modal backdrop blur ─── */
+@keyframes modal-backdrop-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@keyframes modal-content-in {
+  from { opacity: 0; transform: scale(0.96) translateY(8px); }
+  to   { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+/* ─── Button loading : 3 dots bounce (texte reste visible) ─── */
+.btn-loading-container {
+  position: relative;
+  gap: 0.5rem;
+}
+.btn-loading-dots {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  margin-left: 2px;
+}
+.btn-loading-dots .btn-dot {
+  width: 4px;
+  height: 4px;
+  border-radius: 999px;
+  background-color: currentColor;
+  opacity: 0.75;
+  animation: btn-dot-bounce 0.9s ease-in-out infinite;
+}
+.btn-loading-dots .btn-dot:nth-child(2) {
+  animation-delay: 0.15s;
+}
+.btn-loading-dots .btn-dot:nth-child(3) {
+  animation-delay: 0.3s;
+}
+@keyframes btn-dot-bounce {
+  0%, 80%, 100% { transform: translateY(0); opacity: 0.4; }
+  40%           { transform: translateY(-3px); opacity: 1; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .btn-loading-dots .btn-dot { animation: none; }
+}
+
+/* ─── Toast slide ─── */
+@keyframes toast-in {
+  from { opacity: 0; transform: translateX(20px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+@keyframes toast-out {
+  from { opacity: 1; transform: translateX(0); }
+  to   { opacity: 0; transform: translateX(20px); }
+}
+
+/* ─── Reduced motion ─── */
+@media (prefers-reduced-motion: reduce) {
+  [data-animate],
+  .landing-hero-label,
+  .landing-hero-title,
+  .landing-hero-sub,
+  .landing-hero-cta,
+  .landing-scroll-hint,
+  .landing-orb-a,
+  .landing-orb-b,
+  .landing-orb-c {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}
