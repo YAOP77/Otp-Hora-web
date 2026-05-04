@@ -12,7 +12,13 @@ const titles: Record<string, { title: string; breadcrumb: string }> = {
   "/admin/activity": { title: "Journal d'activité", breadcrumb: "Back-Office / Sécurité" },
 };
 
-export function BoHeader({ adminName }: { adminName?: string }) {
+export function BoHeader({
+  adminName,
+  adminEmail,
+}: {
+  adminName?: string;
+  adminEmail?: string;
+}) {
   const pathname = usePathname();
   const { theme, toggleTheme, mounted } = useTheme();
   const page = titles[pathname] ?? { title: "Back-Office", breadcrumb: "" };
@@ -56,6 +62,9 @@ export function BoHeader({ adminName }: { adminName?: string }) {
           <div>
             <div className="bo-avatar-name">{adminName || "Admin"}</div>
             <div className="bo-avatar-role">Administrateur</div>
+            {adminEmail ? (
+              <div style={{ fontSize: 11, color: "var(--bo-text-muted)", marginTop: 2 }}>{adminEmail}</div>
+            ) : null}
           </div>
         </div>
       </div>

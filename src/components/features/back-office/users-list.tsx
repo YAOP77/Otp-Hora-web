@@ -98,18 +98,16 @@ export function UsersList() {
                   <td className="px-4 py-3 text-right">
                     <div className="flex justify-end gap-2">
                       {u.status === "active" ? (
-                        <Button 
-                          size="sm" 
-                          variant="secondary" 
+                        <Button
+                          variant="secondary"
                           className="h-7 px-2 text-[10px] text-amber-600 hover:bg-amber-50"
                           onClick={() => statusMutation.mutate({ userId: u.user_id, status: "suspended" })}
                         >
                           Suspendre
                         </Button>
                       ) : (
-                        <Button 
-                          size="sm" 
-                          variant="secondary" 
+                        <Button
+                          variant="secondary"
                           className="h-7 px-2 text-[10px] text-green-600 hover:bg-green-50"
                           onClick={() => statusMutation.mutate({ userId: u.user_id, status: "active" })}
                         >
@@ -117,9 +115,8 @@ export function UsersList() {
                         </Button>
                       )}
                       
-                      <Button 
-                        size="sm" 
-                        variant="secondary" 
+                      <Button
+                        variant="secondary"
                         className="h-7 px-2 text-[10px] text-error hover:bg-error/10"
                         onClick={() => {
                           if (confirm("Déconnecter tous les appareils de cet utilisateur ?")) {

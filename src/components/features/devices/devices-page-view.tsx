@@ -118,9 +118,8 @@ export function DevicesPageView() {
                     <p className="text-[11px] text-secondary">{device.ip_address || "IP non disponible"}</p>
                   </div>
                 </div>
-                <Button 
-                  variant="secondary" 
-                  size="sm" 
+                <Button
+                  variant="secondary"
                   className="h-8 text-[10px] text-error hover:bg-error/10"
                   onClick={() => handleDeactivate(device.device_id)}
                   loading={deactivating === device.device_id}
